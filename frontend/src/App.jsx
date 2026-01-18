@@ -1,35 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { WagmiProvider } from 'wagmi';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { config } from './config/wagmi';
+import { AuthProvider } from './context/AuthContext';
+
+import Navigation from './components/Navigation';
+import LandingPage from './pages/LandingPage';
+import TournamentBrowser from './pages/TournamentBrowser';
+import CreateTournament from './pages/CreateTournament';
+import TournamentDetails from './pages/TournamentDetails';
+import MyTournaments from './pages/MyTournaments';
+import Leaderboard from './pages/Leaderboard';
+
+const queryClient = new QueryClient();
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <AuthProvider>
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
+          <Router>
+            <div className="min-h-screen bg-gradient-to-br from-[#0a0e27] via-[#1a1f3a] to-[#0f1419]">
+              <Navigation />
+              <div className="pt-20">
+                <Routes>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/tournaments" element={<TournamentBrowser />} />
+                  <Route path="/create-tournament" element={<CreateTournament />} />
+                  <Route path="/tournament/:id" element={<TournamentDetails />} />
+                  <Route path="/my-tournaments" element={<MyTournaments />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
+                </Routes>
+              </div>
+            </div>
+          </Router>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;
