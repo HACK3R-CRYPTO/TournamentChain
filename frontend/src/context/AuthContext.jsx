@@ -27,7 +27,10 @@ export const AuthProvider = ({ children }) => {
                     return;
                 }
 
+                console.log("🔄 Initializing Web3Auth...");
                 await web3auth.init();
+                setIsInitialized(true);
+                console.log("✅ Web3Auth initialized successfully!");
 
                 if (web3auth.connected) {
                     const web3authProvider = web3auth.provider;
@@ -45,7 +48,7 @@ export const AuthProvider = ({ children }) => {
                     setIsConnected(true);
                 }
             } catch (error) {
-                console.error("Error initializing Web3Auth:", error);
+                console.error("❌ Error initializing Web3Auth:", error);
                 console.info("💡 If you see initialization errors, make sure you have a valid Web3Auth Client ID configured.");
             } finally {
                 setIsLoading(false);
