@@ -1,11 +1,40 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
+import { useAccount, useDisconnect } from 'wagmi';
+import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 
 function Navigation() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, address, isConnected, isLoading, login, logout } = useAuth();
+  const { address, isConnected } = useAccount();
+  const { caipAddress } = useAppKitAccount();
+  const { disconnect } = useDisconnect();
+  const { open } = useAppKit();
+  const [displayName, setDisplayName] = useState('');
+
+  useEffect(() => {
+    if (caipAddress && isConnected) {
+      // Extract email or identifier from CAIP address
+      // CAIP format: eip155:1:0x... or email format
+      const parts = caipAddress.split(':');
+      if (parts.length > 2) {
+        const identifier = parts[parts.length - 1];
+        // Check if it looks like an email
+        if (identifier.includes('@')) {
+          setDisplayName(identifier);
+        } else if (identifier.startsWith('0x')) {
+          // It's a wallet address, format it
+          setDisplayName(`${identifier.slice(0, 6)}...${identifier.slice(-4)}`);
+        } else {
+          // Use the identifier as-is (might be a username)
+          setDisplayName(identifier);
+        }
+      } else if (address) {
+        // Fallback to formatted address
+        setDisplayName(`${address.slice(0, 6)}...${address.slice(-4)}`);
+      }
+    }
+  }, [caipAddress, address, isConnected]);
 
   const formatAddress = (addr) => {
     if (!addr) return '';
@@ -17,13 +46,10 @@ function Navigation() {
     return location.pathname === path || location.pathname.startsWith(path);
   };
 
-  const handleConnect = () => {
-    login();
-  };
-
   const navLinks = [
     { path: '/', label: 'Home' },
     { path: '/tournaments', label: 'Tournaments' },
+    { path: '/mini-games', label: 'Mini Games' },
     { path: '/my-tournaments', label: 'My Tournaments' },
     { path: '/leaderboard', label: 'Leaderboard' }
   ];
@@ -58,25 +84,13 @@ function Navigation() {
           <div className="hidden md:flex items-center gap-3">
             {isConnected ? (
               <div className="flex items-center gap-3">
-                {user?.profileImage && (
-                  <img
-                    src={user.profileImage}
-                    alt="Profile"
-                    className="w-8 h-8 rounded-full border-2 border-purple-500"
-                  />
-                )}
                 <div className="flex items-center gap-3 glass px-3 py-2 rounded-lg border border-white/10">
-                  <div className="flex flex-col">
-                    {user?.name && (
-                      <span className="text-sm font-medium text-white">{user.name}</span>
-                    )}
-                    <span className="font-mono text-cyan-400 font-medium text-xs">
-                      {formatAddress(address)}
-                    </span>
-                  </div>
+                  <span className="font-mono text-cyan-400 font-medium text-xs">
+                    {displayName || formatAddress(address)}
+                  </span>
                   <button
                     className="bg-red-500/20 border border-red-500/30 text-red-400 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-red-500/30 transition-all"
-                    onClick={logout}
+                    onClick={() => disconnect()}
                   >
                     Logout
                   </button>
@@ -84,11 +98,10 @@ function Navigation() {
               </div>
             ) : (
               <button
-                className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-5 py-2 rounded-lg font-medium hover:shadow-lg hover:shadow-purple-600/40 transition-all disabled:opacity-50"
-                onClick={login}
-                disabled={isLoading}
+                className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-5 py-2 rounded-lg font-medium hover:shadow-lg hover:shadow-purple-600/40 transition-all"
+                onClick={() => open()}
               >
-                {isLoading ? 'Loading...' : 'Sign In'}
+                Sign In
               </button>
             )}
           </div>
@@ -131,7 +144,7 @@ function Navigation() {
           {isConnected ? (
             <div className="flex flex-col gap-2 bg-white/5 p-4 rounded-lg border border-white/10">
               <span className="font-mono text-cyan-400 font-semibold text-sm">
-                {formatAddress(address)}
+                {displayName || formatAddress(address)}
               </span>
               <button
                 className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-2 rounded-md text-sm font-semibold hover:bg-red-500/30 transition-all"
@@ -147,11 +160,11 @@ function Navigation() {
             <button
               className="w-full bg-gradient-to-r from-purple-600 to-purple-800 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-600/40 transition-all"
               onClick={() => {
-                handleConnect();
+                open();
                 setMobileMenuOpen(false);
               }}
             >
-              Connect Wallet
+              Sign In
             </button>
           )}
         </div>
