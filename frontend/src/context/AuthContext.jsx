@@ -15,9 +15,8 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const init = async () => {
             try {
-                // Check if Client ID is configured
-                const clientId = import.meta.env.VITE_WEB3AUTH_CLIENT_ID;
-                if (!clientId || clientId === "YOUR_CLIENT_ID_HERE") {
+                // Check if web3auth instance exists
+                if (!web3auth) {
                     console.warn("⚠️ Web3Auth Client ID not configured. Social login is disabled.");
                     console.info("📋 To enable social login:");
                     console.info("1. Get your Client ID from https://dashboard.web3auth.io");
@@ -60,9 +59,8 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (loginProvider = null) => {
         try {
-            // Check if Client ID is configured
-            const clientId = import.meta.env.VITE_WEB3AUTH_CLIENT_ID;
-            if (!clientId || clientId === "YOUR_CLIENT_ID_HERE") {
+            // Check if web3auth instance exists
+            if (!web3auth) {
                 alert("⚠️ Web3Auth is not configured.\n\nTo enable social login:\n1. Get your Client ID from https://dashboard.web3auth.io\n2. Create a .env file with: VITE_WEB3AUTH_CLIENT_ID=your_client_id\n3. Restart the dev server");
                 return { success: false, error: "Web3Auth not configured" };
             }
@@ -133,7 +131,9 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await web3auth.logout();
+            if (web3auth) {
+                await web3auth.logout();
+            }
             setProvider(null);
             setUser(null);
             setAddress(null);

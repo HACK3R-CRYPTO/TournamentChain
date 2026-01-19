@@ -120,7 +120,7 @@ function TournamentBrowser() {
         </div>
 
         <div className="grid lg:grid-cols-[280px_1fr] gap-8">
-          <aside className="glass rounded-xl p-6 h-fit lg:sticky top-24 animate-slide-up">
+          <aside className="glass rounded-xl p-6 h-fit lg:sticky lg:top-28 animate-slide-up">
             <h3 className="mt-0 mb-6 text-xl font-semibold">Filters</h3>
 
             <div className="mb-6">
@@ -148,25 +148,27 @@ function TournamentBrowser() {
               </select>
             </div>
 
+
             <div className="mb-6">
-              <label className="block text-sm mb-2 text-white/70 font-medium">Entry Fee Range (ETH)</label>
-              <div className="flex items-center gap-2">
+              <label className="block text-sm mb-2 text-white/70 font-medium">Entry Fee Range</label>
+              <div className="flex flex-col gap-2">
                 <input
                   type="number"
-                  placeholder="Min"
+                  placeholder="Min (ETH)"
                   step="0.001"
+                  min="0"
                   value={filters.minEntryFee}
                   onChange={(e) => setFilters({ ...filters, minEntryFee: e.target.value })}
-                  className="flex-1 px-2.5 py-2.5 bg-white/10 border border-white/20 rounded-md text-white text-sm placeholder:text-white/40 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
+                  className="w-full px-2.5 py-2.5 bg-white/10 border border-white/20 rounded-md text-white text-sm placeholder:text-white/40 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
                 />
-                <span className="text-sm text-white/50">to</span>
                 <input
                   type="number"
-                  placeholder="Max"
+                  placeholder="Max (ETH)"
                   step="0.001"
+                  min="0"
                   value={filters.maxEntryFee}
                   onChange={(e) => setFilters({ ...filters, maxEntryFee: e.target.value })}
-                  className="flex-1 px-2.5 py-2.5 bg-white/10 border border-white/20 rounded-md text-white text-sm placeholder:text-white/40 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
+                  className="w-full px-2.5 py-2.5 bg-white/10 border border-white/20 rounded-md text-white text-sm placeholder:text-white/40 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
                 />
               </div>
             </div>

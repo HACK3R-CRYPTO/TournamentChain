@@ -1,8 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { config } from './config/wagmi';
-import { AuthProvider } from './context/AuthContext';
+import { config } from './config/appkit';
 
 import Navigation from './components/Navigation';
 import LandingPage from './pages/LandingPage';
@@ -11,32 +10,32 @@ import CreateTournament from './pages/CreateTournament';
 import TournamentDetails from './pages/TournamentDetails';
 import MyTournaments from './pages/MyTournaments';
 import Leaderboard from './pages/Leaderboard';
+import MiniGames from './pages/MiniGames';
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <AuthProvider>
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
-          <Router>
-            <div className="min-h-screen bg-gradient-to-br from-[#0a0e27] via-[#1a1f3a] to-[#0f1419]">
-              <Navigation />
-              <div className="pt-20">
-                <Routes>
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/tournaments" element={<TournamentBrowser />} />
-                  <Route path="/create-tournament" element={<CreateTournament />} />
-                  <Route path="/tournament/:id" element={<TournamentDetails />} />
-                  <Route path="/my-tournaments" element={<MyTournaments />} />
-                  <Route path="/leaderboard" element={<Leaderboard />} />
-                </Routes>
-              </div>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <div className="min-h-screen bg-gradient-to-br from-[#0a0e27] via-[#1a1f3a] to-[#0f1419]">
+            <Navigation />
+            <div className="pt-20">
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/tournaments" element={<TournamentBrowser />} />
+                <Route path="/mini-games" element={<MiniGames />} />
+                <Route path="/create-tournament" element={<CreateTournament />} />
+                <Route path="/tournament/:id" element={<TournamentDetails />} />
+                <Route path="/my-tournaments" element={<MyTournaments />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+              </Routes>
             </div>
-          </Router>
-        </QueryClientProvider>
-      </WagmiProvider>
-    </AuthProvider>
+          </div>
+        </Router>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }
 

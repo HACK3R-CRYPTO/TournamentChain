@@ -19,23 +19,29 @@ const privateKeyProvider = new EthereumPrivateKeyProvider({
   config: { chainConfig },
 });
 
-export const web3auth = new Web3Auth({
-  clientId,
-  web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
-  privateKeyProvider,
-  uiConfig: {
-    appName: "GameArena",
-    theme: {
-      primary: "#7b2ff7",
-      gray: "#1a1f3a",
+// Only create Web3Auth instance if we have a valid client ID
+let web3auth = null;
+
+if (clientId && clientId !== "YOUR_CLIENT_ID_HERE") {
+  web3auth = new Web3Auth({
+    clientId,
+    web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+    privateKeyProvider,
+    uiConfig: {
+      appName: "GameArena",
+      theme: {
+        primary: "#7b2ff7",
+        gray: "#1a1f3a",
+      },
+      mode: "dark",
+      defaultLanguage: "en",
+      loginGridCol: 3,
+      primaryButton: "socialLogin",
     },
-    mode: "dark",
-    logoLight: "https://web3auth.io/images/web3auth-logo.svg",
-    logoDark: "https://web3auth.io/images/web3auth-logo.svg",
-    defaultLanguage: "en",
-    loginGridCol: 3,
-    primaryButton: "socialLogin",
-  },
-});
+  });
+
+  // Note: Web3Auth Modal SDK has built-in adapters
+  // No need to configure adapters manually - they're included by default
+}
 
 export default web3auth;
