@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
-import "openzeppelin-contracts/contracts/access/Ownable.sol";
-import "openzeppelin-contracts/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title WinnerBadge
@@ -44,7 +44,7 @@ contract WinnerBadge is ERC721, Ownable {
     event MinterAuthorized(address indexed minter);
     event MinterRevoked(address indexed minter);
     
-    constructor() ERC721("TournamentChain Winner Badge", "TCWB") Ownable(msg.sender) {}
+    constructor() ERC721("TournamentChain Winner Badge", "TCWB") Ownable() {}
     
     /**
      * @dev Mint a winner badge (only authorized contracts can call)
@@ -107,7 +107,7 @@ contract WinnerBadge is ERC721, Ownable {
      * @dev Override tokenURI to generate metadata
      */
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        _requireOwned(tokenId);
+        _requireMinted(tokenId);
         
         Badge memory badge = badges[tokenId];
         string memory positionName = _getPositionName(badge.position);

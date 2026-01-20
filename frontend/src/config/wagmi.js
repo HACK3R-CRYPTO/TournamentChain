@@ -2,8 +2,7 @@ import { http, createConfig } from 'wagmi';
 import { mainnet, sepolia } from 'wagmi/chains';
 import { injected, walletConnect } from 'wagmi/connectors';
 
-// TODO: Replace with your WalletConnect Project ID
-const projectId = 'YOUR_WALLETCONNECT_PROJECT_ID';
+const projectId = import.meta.env.VITE_REOWN_PROJECT_ID;
 
 export const config = createConfig({
   chains: [mainnet, sepolia],

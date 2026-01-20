@@ -1,77 +1,123 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
-
-const mockTournaments = {
-  joined: [
-    {
-      id: '1',
-      name: 'Weekly Blitz Challenge',
-      entryFee: 0.05,
-      prizePool: 2.5,
-      status: 'LIVE',
-      myRank: 3,
-      myScore: 4250,
-      participants: 67,
-      endTime: new Date(Date.now() + 3 * 86400000).toISOString(),
-      potentialPrize: 0.375
-    },
-    {
-      id: '2',
-      name: 'Monthly Masters',
-      entryFee: 0.1,
-      prizePool: 5.0,
-      status: 'LIVE',
-      myRank: 12,
-      myScore: 2890,
-      participants: 50,
-      endTime: new Date(Date.now() + 10 * 86400000).toISOString(),
-      potentialPrize: 0.05
-    },
-    {
-      id: '3',
-      name: 'Summer Championship',
-      entryFee: 0.08,
-      prizePool: 4.0,
-      status: 'ENDED',
-      myRank: 1,
-      myScore: 7650,
-      participants: 50,
-      endTime: new Date(Date.now() - 2 * 86400000).toISOString(),
-      potentialPrize: 2.0,
-      claimed: true
-    }
-  ],
-  created: [
-    {
-      id: '4',
-      name: 'Friday Night Fights',
-      entryFee: 0.03,
-      prizePool: 1.5,
-      status: 'UPCOMING',
-      participants: 28,
-      maxParticipants: 100,
-      startTime: new Date(Date.now() + 5 * 86400000).toISOString(),
-      endTime: new Date(Date.now() + 7 * 86400000).toISOString()
-    },
-    {
-      id: '5',
-      name: 'Beginner\'s Cup',
-      entryFee: 0.01,
-      prizePool: 0.5,
-      status: 'LIVE',
-      participants: 42,
-      maxParticipants: 50,
-      startTime: new Date(Date.now() - 1 * 86400000).toISOString(),
-      endTime: new Date(Date.now() + 2 * 86400000).toISOString()
-    }
-  ]
-};
+import { useAccount, useReadContract, useReadContracts, useSwitchChain } from 'wagmi';
+import { CONTRACT_ADDRESSES, TOURNAMENT_PLATFORM_ABI, WINNER_BADGE_ABI } from '../config/contracts';
+import { formatEther } from 'viem';
 
 function MyTournaments() {
   const navigate = useNavigate();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chain } = useAccount();
+  const { switchChain } = useSwitchChain();
   const [activeTab, setActiveTab] = useState('joined');
+  
+  const SEPOLIA_CHAIN_ID = 11155111;
+  const isWrongNetwork = isConnected && chain?.id !== SEPOLIA_CHAIN_ID;
+
+  // Read tournament counter
+  const { data: tournamentCounter, isError: counterError, isLoading: counterLoading } = useReadContract({
+    address: CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM,
+    abi: TOURNAMENT_PLATFORM_ABI,
+    functionName: 'tournamentCounter',
+    chainId: SEPOLIA_CHAIN_ID,
+  });
+
+  // Read badge balance
+  const { data: badgeBalance, isError: badgeError, isLoading: badgeLoading } = useReadContract({
+    address: CONTRACT_ADDRESSES.WINNER_BADGE,
+    abi: WINNER_BADGE_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    chainId: SEPOLIA_CHAIN_ID,
+  });
+
+  // Build array of contract calls to fetch all tournaments
+  // Note: getPlayerTournaments only returns tournaments where user joined (paid entry fee)
+  // To show created tournaments, we need to fetch all and filter by creator
+  const tournamentIds = tournamentCounter ? Array.from({ length: Number(tournamentCounter) }, (_, i) => i + 1) : [];
+  const tournamentCalls = tournamentIds.map(id => ({
+    address: CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM,
+    abi: TOURNAMENT_PLATFORM_ABI,
+    functionName: 'getTournament',
+    args: [BigInt(id)],
+    chainId: SEPOLIA_CHAIN_ID,
+  }));
+
+  // Also fetch player tournaments to know which ones they joined
+  const { data: playerTournamentIds } = useReadContract({
+    address: CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM,
+    abi: TOURNAMENT_PLATFORM_ABI,
+    functionName: 'getPlayerTournaments',
+    args: address ? [address] : undefined,
+    chainId: SEPOLIA_CHAIN_ID,
+  });
+
+  const { data: tournamentsData } = useReadContracts({
+    contracts: tournamentCalls,
+    query: {
+      enabled: tournamentCalls.length > 0,
+    }
+  });
+
+  // Process tournament data with useMemo to avoid cascading renders
+  const myTournaments = useMemo(() => {
+    if (!tournamentsData || !address) return { joined: [], created: [] };
+
+    const joined = [];
+    const created = [];
+    const playerIdSet = new Set(playerTournamentIds?.map(id => Number(id)) || []);
+
+    tournamentsData.forEach((item) => {
+      if (item.status !== 'success' || !item.result) return;
+
+      const tournament = item.result;
+      const statusMap = ['UPCOMING', 'LIVE', 'ENDED', 'CANCELLED'];
+      const tournamentId = Number(tournament.id);
+      
+      const processedTournament = {
+        id: tournamentId,
+        name: tournament.name,
+        description: tournament.description,
+        creator: tournament.creator,
+        entryFee: formatEther(tournament.entryFee),
+        prizePool: formatEther(tournament.prizePool),
+        maxParticipants: Number(tournament.maxParticipants),
+        currentParticipants: 0,
+        status: statusMap[tournament.status] || 'UPCOMING',
+        startTime: Number(tournament.startTime) * 1000,
+        endTime: Number(tournament.endTime) * 1000,
+      };
+
+      const isCreator = tournament.creator.toLowerCase() === address.toLowerCase();
+      const hasJoined = playerIdSet.has(tournamentId);
+
+      // Add to created if user is creator
+      if (isCreator) {
+        created.push(processedTournament);
+      }
+      
+      // Add to joined if user joined (but not creator, to avoid duplicates)
+      if (hasJoined && !isCreator) {
+        joined.push(processedTournament);
+      }
+    });
+
+    return { joined, created };
+  }, [tournamentsData, address, playerTournamentIds]);
+
+  useEffect(() => {
+    console.log('=== Contract Read Status ===');
+    console.log('Connected:', isConnected);
+    console.log('Chain ID:', chain?.id);
+    console.log('Address:', address);
+    console.log('Counter Loading:', counterLoading, 'Error:', counterError);
+    console.log('Badge Loading:', badgeLoading, 'Error:', badgeError);
+    console.log('Tournament Counter:', tournamentCounter?.toString());
+    console.log('Badge Balance:', badgeBalance?.toString());
+    console.log('Player Tournament IDs:', playerTournamentIds);
+    console.log('Tournaments Data:', tournamentsData);
+    console.log('Processed Tournaments:', myTournaments);
+    console.log('Contract Address:', CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM);
+  }, [tournamentCounter, badgeBalance, isConnected, chain, address, counterLoading, counterError, badgeLoading, badgeError, playerTournamentIds, tournamentsData, myTournaments]);
 
   if (!isConnected) {
     return (
@@ -84,6 +130,24 @@ function MyTournaments() {
             onClick={() => navigate('/tournaments')}
           >
             Back to Tournaments
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isWrongNetwork) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#16213e] text-white">
+        <div className="max-w-2xl mx-auto my-16 text-center p-12 bg-white/5 rounded-xl border border-white/10">
+          <h2 className="mb-4 text-2xl">⚠️ Wrong Network</h2>
+          <p className="mb-2 text-white/90 font-semibold">Current Network: {chain?.name || 'Unknown'}</p>
+          <p className="mb-6 text-white/70">Please switch to Sepolia Testnet</p>
+          <button
+            onClick={() => switchChain({ chainId: SEPOLIA_CHAIN_ID })}
+            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg font-semibold text-lg hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/40 transition-all"
+          >
+            🔄 Switch to Sepolia
           </button>
         </div>
       </div>
@@ -118,7 +182,7 @@ function MyTournaments() {
     }
   };
 
-  const tournaments = activeTab === 'joined' ? mockTournaments.joined : mockTournaments.created;
+  const tournaments = myTournaments[activeTab];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#16213e] text-white">
@@ -138,7 +202,7 @@ function MyTournaments() {
               }`}
               onClick={() => setActiveTab('joined')}
             >
-              Joined Tournaments ({mockTournaments.joined.length})
+              Joined Tournaments ({tournaments.length})
             </button>
             <button
               className={`flex-1 px-8 py-4 font-semibold transition-all ${
@@ -148,23 +212,38 @@ function MyTournaments() {
               }`}
               onClick={() => setActiveTab('created')}
             >
-              Created Tournaments ({mockTournaments.created.length})
+              Created Tournaments ({myTournaments.created.length})
             </button>
           </div>
 
           <div className="p-8">
             {tournaments.length === 0 ? (
               <div className="text-center py-16">
-                <p className="mb-6 text-xl text-white/60">
-                  {activeTab === 'joined' 
-                    ? "You haven't joined any tournaments yet"
-                    : "You haven't created any tournaments yet"}
-                </p>
+                <div className="mb-6">
+                  <div className="text-6xl mb-4">🎮</div>
+                  <p className="text-xl text-white/80 mb-2">
+                    {activeTab === 'joined' 
+                      ? "You haven't joined any tournaments yet"
+                      : "You haven't created any tournaments yet"}
+                  </p>
+                  <p className="text-white/50 mb-6">
+                    {activeTab === 'joined'
+                      ? 'Browse available tournaments and start competing!'
+                      : 'Create your first tournament and invite players to compete'}
+                  </p>
+                </div>
+                <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-6 max-w-md mx-auto mb-6">
+                  <p className="text-sm text-cyan-300">
+                    <strong>🔗 Connected to Sepolia</strong><br/>
+                    Total tournaments on-chain: {tournamentCounter?.toString() || '0'}<br/>
+                    Your NFT badges: {badgeBalance?.toString() || '0'}
+                  </p>
+                </div>
                 <button
                   className="px-8 py-3.5 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-purple-600/40 transition-all"
-                  onClick={() => navigate(activeTab === 'joined' ? '/tournaments' : '/create')}
+                  onClick={() => navigate(activeTab === 'joined' ? '/tournaments' : '/create-tournament')}
                 >
-                  {activeTab === 'joined' ? 'Browse Tournaments' : 'Create Tournament'}
+                  {activeTab === 'joined' ? '🎯 Browse Tournaments' : '➕ Create Tournament'}
                 </button>
               </div>
             ) : (
@@ -281,24 +360,20 @@ function MyTournaments() {
           <h2 className="mt-0 mb-6 text-2xl font-semibold">Performance Summary</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-white/5 p-6 rounded-lg border border-white/10 text-center">
-              <p className="text-white/60 mb-2">Total Tournaments</p>
-              <p className="text-4xl font-bold text-gradient">{mockTournaments.joined.length}</p>
+              <p className="text-white/60 mb-2">Total Joined</p>
+              <p className="text-4xl font-bold text-gradient">{myTournaments.joined.length}</p>
             </div>
             <div className="bg-white/5 p-6 rounded-lg border border-white/10 text-center">
-              <p className="text-white/60 mb-2">Total Winnings</p>
-              <p className="text-4xl font-bold text-gradient">2.375 ETH</p>
+              <p className="text-white/60 mb-2">Total Created</p>
+              <p className="text-4xl font-bold text-gradient">{myTournaments.created.length}</p>
             </div>
             <div className="bg-white/5 p-6 rounded-lg border border-white/10 text-center">
-              <p className="text-white/60 mb-2">Avg. Rank</p>
-              <p className="text-4xl font-bold text-gradient">
-                {Math.round(mockTournaments.joined.reduce((sum, t) => sum + (t.myRank || 0), 0) / mockTournaments.joined.length)}
-              </p>
+              <p className="text-white/60 mb-2">NFT Badges</p>
+              <p className="text-4xl font-bold text-gradient">{badgeBalance?.toString() || '0'}</p>
             </div>
             <div className="bg-white/5 p-6 rounded-lg border border-white/10 text-center">
-              <p className="text-white/60 mb-2">Win Rate</p>
-              <p className="text-4xl font-bold text-gradient">
-                {Math.round((mockTournaments.joined.filter(t => t.myRank === 1).length / mockTournaments.joined.length) * 100)}%
-              </p>
+              <p className="text-white/60 mb-2">On Sepolia</p>
+              <p className="text-2xl font-bold text-cyan-400">✓ Connected</p>
             </div>
           </div>
         </div>

@@ -1,22 +1,23 @@
 import { createAppKit } from '@reown/appkit/react'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { mainnet, polygon, polygonMumbai } from 'viem/chains'
+import { mainnet, sepolia } from 'viem/chains'
 
 // Get project ID from https://cloud.reown.com
 const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || 'YOUR_PROJECT_ID'
 
 const metadata = {
-  name: 'GameArena',
+  name: 'TournamentChain',
   description: 'Decentralized Gaming Tournament Platform',
-  url: typeof window !== 'undefined' ? window.location.origin : 'https://gamearena.com',
+  url: typeof window !== 'undefined' ? window.location.origin : 'https://tournamentchain.com',
   icons: ['https://avatars.githubusercontent.com/u/37784886']
 }
 
-const networks = [polygon, polygonMumbai, mainnet]
+const networks = [sepolia, mainnet]
 
 export const wagmiAdapter = new WagmiAdapter({
   networks,
-  projectId
+  projectId,
+  ssr: false
 })
 
 createAppKit({
@@ -25,19 +26,21 @@ createAppKit({
   projectId,
   metadata,
   features: {
-    analytics: true,
-    email: true, // Enable email login
-    socials: ['google', 'x', 'github', 'discord', 'apple', 'facebook'], // Enable social logins
-    onramp: false, // Hide crypto onramp
-    swaps: false // Hide token swaps
+    analytics: false, // Disable analytics to avoid API calls
+    email: true,
+    socials: ['google', 'x', 'github', 'discord', 'apple', 'facebook'],
+    smartSessions: false,
+    onramp: false,
+    swaps: false
   },
   themeMode: 'dark',
   themeVariables: {
-    '--w3m-accent': '#7b2ff7' // Match your app's purple theme
+    '--w3m-accent': '#7b2ff7'
   },
-  featuredWalletIds: [], // Hide featured wallets to emphasize social login
-  includeWalletIds: [], // Only show social login options
-  excludeWalletIds: ['all'] // Exclude all wallet options
+  allWallets: 'HIDE', // Hide the wallet list that's causing the API error
+  featuredWalletIds: [],
+  includeWalletIds: [],
+  excludeWalletIds: []
 })
 
 export const config = wagmiAdapter.wagmiConfig

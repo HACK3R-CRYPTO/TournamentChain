@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAccount, useReadContract } from 'wagmi';
+import { useAccount, useReadContract, useReadContracts } from 'wagmi';
+import { CONTRACT_ADDRESSES, TOURNAMENT_PLATFORM_ABI } from '../config/contracts';
+import { formatEther } from 'viem';
 
 function TournamentBrowser() {
   const navigate = useNavigate();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chain } = useAccount();
   const [tournaments, setTournaments] = useState([]);
   const [filters, setFilters] = useState({
     status: 'all',
@@ -13,52 +15,86 @@ function TournamentBrowser() {
     searchTerm: ''
   });
 
-  const TOURNAMENT_CONTRACT_ADDRESS = '0x...';
+  const TOURNAMENT_CONTRACT_ADDRESS = CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM;
+  const SEPOLIA_CHAIN_ID = 11155111;
+
+  // Read tournament counter from contract
+  const { data: tournamentCounter, isLoading: counterLoading, isError: counterError } = useReadContract({
+    address: TOURNAMENT_CONTRACT_ADDRESS,
+    abi: TOURNAMENT_PLATFORM_ABI,
+    functionName: 'tournamentCounter',
+    chainId: SEPOLIA_CHAIN_ID,
+  });
 
   useEffect(() => {
-    const mockTournaments = [
-      {
-        id: 1,
-        name: 'Weekly Survival Challenge',
-        description: 'Compete for the highest survival score',
-        entryFee: '0.01',
-        prizePool: '0.5',
-        maxParticipants: 100,
-        currentParticipants: 45,
-        startTime: Date.now() + 86400000,
-        endTime: Date.now() + 604800000,
-        status: 'upcoming',
-        creator: '0x1234...5678'
-      },
-      {
-        id: 2,
-        name: 'Elite Shooter Tournament',
-        description: 'High stakes competition for experienced players',
-        entryFee: '0.05',
-        prizePool: '2.5',
-        maxParticipants: 50,
-        currentParticipants: 38,
-        startTime: Date.now() - 3600000,
-        endTime: Date.now() + 82800000,
-        status: 'active',
-        creator: '0xabcd...efgh'
-      },
-      {
-        id: 3,
-        name: 'Beginner Friendly Match',
-        description: 'Perfect for new players to practice',
-        entryFee: '0.001',
-        prizePool: '0.05',
-        maxParticipants: 200,
-        currentParticipants: 156,
-        startTime: Date.now() + 172800000,
-        endTime: Date.now() + 432000000,
-        status: 'upcoming',
-        creator: '0x9876...4321'
-      }
-    ];
-    setTournaments(mockTournaments);
-  }, []);
+    console.log('Tournament Counter:', tournamentCounter?.toString());
+    console.log('Counter Loading:', counterLoading);
+    console.log('Counter Error:', counterError);
+  }, [tournamentCounter, counterLoading, counterError]);
+
+  // Build array of contract calls to fetch all tournaments
+  const tournamentIds = tournamentCounter ? Array.from({ length: Number(tournamentCounter) }, (_, i) => i + 1) : [];
+  const tournamentCalls = tournamentIds.map(id => ({
+    address: TOURNAMENT_CONTRACT_ADDRESS,
+    abi: TOURNAMENT_PLATFORM_ABI,
+    functionName: 'getTournament',
+    args: [BigInt(id)],
+    chainId: SEPOLIA_CHAIN_ID,
+  }));
+
+  // Fetch all tournament data
+  const { data: tournamentsData, isLoading: tournamentsLoading, isError: tournamentsError } = useReadContracts({
+    contracts: tournamentCalls,
+    query: {
+      enabled: tournamentCalls.length > 0,
+    }
+  });
+
+  // Process tournament data
+  useEffect(() => {
+    if (!tournamentsData) return;
+    
+    console.log('Raw tournament data:', tournamentsData);
+    console.log('Tournament data length:', tournamentsData.length);
+    
+    const processedTournaments = tournamentsData
+      .map((item, index) => {
+        console.log(`Processing item ${index + 1}:`, item);
+        
+        if (item.status !== 'success') {
+          console.log(`Tournament ${index + 1} failed - status:`, item.status, 'error:', item.error);
+          return null;
+        }
+        
+        if (!item.result) {
+          console.log(`Tournament ${index + 1} has no result`);
+          return null;
+        }
+        
+        const tournament = item.result;
+        console.log(`Tournament ${index + 1} data:`, tournament);
+        
+        const statusMap = ['UPCOMING', 'LIVE', 'ENDED', 'CANCELLED'];
+        
+        return {
+          id: Number(tournament.id),
+          name: tournament.name,
+          description: tournament.description,
+          creator: tournament.creator,
+          entryFee: formatEther(tournament.entryFee),
+          prizePool: formatEther(tournament.prizePool),
+          maxParticipants: Number(tournament.maxParticipants),
+          currentParticipants: 0, // TODO: Fetch participants count
+          startTime: Number(tournament.startTime) * 1000,
+          endTime: Number(tournament.endTime) * 1000,
+          status: statusMap[tournament.status] || 'UPCOMING',
+        };
+      })
+      .filter(Boolean);
+    
+    console.log('Processed tournaments:', processedTournaments);
+    setTournaments(processedTournaments);
+  }, [tournamentsData]);
 
   const filteredTournaments = tournaments.filter(tournament => {
     if (filters.status !== 'all' && tournament.status !== filters.status) return false;
@@ -86,14 +122,14 @@ function TournamentBrowser() {
 
   const getStatusBadge = (status) => {
     const badges = {
-      active: 'bg-green-500/20 text-green-400 border-green-500',
-      upcoming: 'bg-blue-500/20 text-blue-400 border-blue-500',
-      completed: 'bg-gray-500/20 text-gray-400 border-gray-500'
+      LIVE: 'bg-green-500/20 text-green-400 border-green-500',
+      UPCOMING: 'bg-blue-500/20 text-blue-400 border-blue-500',
+      ENDED: 'bg-gray-500/20 text-gray-400 border-gray-500',
+      CANCELLED: 'bg-red-500/20 text-red-400 border-red-500'
     };
-    const text = { active: 'LIVE', upcoming: 'UPCOMING', completed: 'ENDED' };
     return (
-      <span className={`px-3 py-1 rounded-xl text-xs font-bold tracking-wider border ${badges[status] || badges.upcoming}`}>
-        {text[status] || text.upcoming}
+      <span className={`px-3 py-1 rounded-xl text-xs font-bold tracking-wider border ${badges[status] || badges.UPCOMING}`}>
+        {status}
       </span>
     );
   };
@@ -142,9 +178,10 @@ function TournamentBrowser() {
                 className="w-full px-2.5 py-2.5 bg-white/10 border border-white/20 rounded-md text-white text-sm focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
               >
                 <option value="all">All Tournaments</option>
-                <option value="active">Active</option>
-                <option value="upcoming">Upcoming</option>
-                <option value="completed">Completed</option>
+                <option value="LIVE">Live</option>
+                <option value="UPCOMING">Upcoming</option>
+                <option value="ENDED">Ended</option>
+                <option value="CANCELLED">Cancelled</option>
               </select>
             </div>
 

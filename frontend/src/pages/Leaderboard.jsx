@@ -1,19 +1,42 @@
-import { useState } from 'react';
-
-const mockLeaderboard = Array.from({ length: 50 }, (_, i) => ({
-  rank: i + 1,
-  address: `0x${Math.random().toString(16).slice(2, 6)}...${Math.random().toString(16).slice(2, 6)}`,
-  tournaments: Math.floor(Math.random() * 50) + 10,
-  totalWinnings: (Math.random() * 10 + 0.5).toFixed(3),
-  avgRank: Math.floor(Math.random() * 20) + 1,
-  winRate: Math.floor(Math.random() * 60) + 20
-}));
+import { useState, useEffect, useMemo } from 'react';
+import { useReadContract } from 'wagmi';
+import { CONTRACT_ADDRESSES, TOURNAMENT_PLATFORM_ABI } from '../config/contracts';
 
 function Leaderboard() {
   const [timeFilter, setTimeFilter] = useState('all-time');
 
-  const topThree = mockLeaderboard.slice(0, 3);
-  const rest = mockLeaderboard.slice(3);
+  const SEPOLIA_CHAIN_ID = 11155111;
+
+  // Fetch tournament counter
+  const { data: tournamentCounter } = useReadContract({
+    address: CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM,
+    abi: TOURNAMENT_PLATFORM_ABI,
+    functionName: 'tournamentCounter',
+    chainId: SEPOLIA_CHAIN_ID,
+  });
+
+  // For now, show placeholder leaderboard since we need to aggregate data from multiple tournaments
+  // In production, you'd want a backend service to aggregate this data
+  const leaderboard = useMemo(() => {
+    // Static placeholder data to avoid React Compiler warnings about impure functions
+    const placeholderData = [
+      { rank: 1, address: '0xAbCd1234...5678', tournaments: 5, totalWinnings: '1.234', avgRank: 2, winRate: 75 },
+      { rank: 2, address: '0xDeFg5678...9abc', tournaments: 4, totalWinnings: '0.892', avgRank: 3, winRate: 68 },
+      { rank: 3, address: '0xHiJk9012...3def', tournaments: 3, totalWinnings: '0.567', avgRank: 4, winRate: 55 },
+      { rank: 4, address: '0xLmNo3456...7ghi', tournaments: 4, totalWinnings: '0.445', avgRank: 5, winRate: 50 },
+      { rank: 5, address: '0xPqRs7890...1jkl', tournaments: 2, totalWinnings: '0.334', avgRank: 6, winRate: 45 },
+      { rank: 6, address: '0xTuVw1234...5mno', tournaments: 3, totalWinnings: '0.289', avgRank: 7, winRate: 40 },
+      { rank: 7, address: '0xYzAb5678...9pqr', tournaments: 2, totalWinnings: '0.223', avgRank: 8, winRate: 38 },
+      { rank: 8, address: '0xCdEf9012...3stu', tournaments: 1, totalWinnings: '0.178', avgRank: 9, winRate: 35 },
+      { rank: 9, address: '0xGhIj3456...7vwx', tournaments: 2, totalWinnings: '0.156', avgRank: 10, winRate: 30 },
+      { rank: 10, address: '0xKlMn7890...1yza', tournaments: 1, totalWinnings: '0.112', avgRank: 11, winRate: 25 },
+    ];
+    
+    return tournamentCounter ? placeholderData : [];
+  }, [tournamentCounter]);
+
+  const topThree = leaderboard.slice(0, 3);
+  const rest = leaderboard.slice(3);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0e27] via-[#1a1f3a] to-[#0f1419] text-white particle-bg">
@@ -22,6 +45,9 @@ function Leaderboard() {
         <div className="mb-8 animate-slide-up">
           <h1 className="m-0 text-4xl md:text-5xl font-black text-gradient">🎯 Global Leaderboard</h1>
           <p className="mt-2 text-lg text-white/70">Top players ranked by their tournament performance</p>
+          <div className="mt-4 glass rounded-lg p-4 border border-yellow-500/30">
+            <p className="text-yellow-400">ℹ️ <strong>Note:</strong> Currently showing placeholder data. Full leaderboard aggregation requires a backend service to collect scores from all tournaments.</p>
+          </div>
         </div>
 
         <div className="mb-8 flex justify-end animate-slide-up">
@@ -146,7 +172,7 @@ function Leaderboard() {
         </div>
 
         <div className="mt-8 text-center text-white/60">
-          <p>Showing {mockLeaderboard.length} players • Updated in real-time</p>
+          <p>Showing {leaderboard.length} players • Aggregated from {tournamentCounter?.toString() || 0} tournaments</p>
         </div>
       </div>
     </div>

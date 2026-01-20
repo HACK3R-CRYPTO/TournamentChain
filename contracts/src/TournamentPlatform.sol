@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "openzeppelin-contracts/contracts/access/Ownable.sol";
-import "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./WinnerBadge.sol";
 
 /**
@@ -143,7 +143,7 @@ contract TournamentPlatform is Ownable, ReentrancyGuard {
         _;
     }
     
-    constructor(address _treasury, address _winnerBadge) Ownable(msg.sender) {
+    constructor(address _treasury, address _winnerBadge) Ownable() {
         require(_treasury != address(0), "Invalid treasury address");
         require(_winnerBadge != address(0), "Invalid badge address");
         platformTreasury = _treasury;

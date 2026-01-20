@@ -1,12 +1,39 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
+import { CONTRACT_ADDRESSES, TOURNAMENT_PLATFORM_ABI } from '../config/contracts';
 
 function CreateTournament() {
   const navigate = useNavigate();
-  const { address, isConnected } = useAccount();
-  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { address, isConnected, chain, isConnecting } = useAccount();
+  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  
+  const SEPOLIA_CHAIN_ID = 11155111;
+  const isWrongNetwork = isConnected && chain?.id !== SEPOLIA_CHAIN_ID;
+  
+  // Show transaction hash when available
+  if (hash) {
+    console.log('Transaction hash:', hash);
+    console.log('View on Etherscan:', `https://sepolia.etherscan.io/tx/${hash}`);
+  }
+  
+  // Show any write errors
+  if (writeError) {
+    console.error('Write error:', writeError);
+  }
+  
+  const handleSwitchNetwork = async () => {
+    try {
+      console.log('Attempting to switch to Sepolia...');
+      await switchChain({ chainId: SEPOLIA_CHAIN_ID });
+      console.log('Successfully switched to Sepolia!');
+    } catch (error) {
+      console.error('Failed to switch network:', error);
+      alert('Failed to switch network: ' + error.message);
+    }
+  };
 
   const [formData, setFormData] = useState({
     name: '',
@@ -38,8 +65,12 @@ function CreateTournament() {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = 'Tournament name is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
-    if (!formData.entryFee || parseFloat(formData.entryFee) <= 0) newErrors.entryFee = 'Entry fee must be greater than 0';
-    if (!formData.maxParticipants || parseInt(formData.maxParticipants) < 2) newErrors.maxParticipants = 'Must allow at least 2 participants';
+    if (!formData.entryFee || parseFloat(formData.entryFee) < 0.001) newErrors.entryFee = 'Entry fee must be at least 0.001 ETH';
+    if (!formData.maxParticipants || parseInt(formData.maxParticipants) < 2) {
+      newErrors.maxParticipants = 'Must allow at least 2 participants';
+    } else if (parseInt(formData.maxParticipants) > 50) {
+      newErrors.maxParticipants = 'Maximum 50 participants allowed (gas limit)';
+    }
     if (!formData.startTime) {
       newErrors.startTime = 'Start time is required';
     } else if (new Date(formData.startTime) <= new Date()) {
@@ -58,20 +89,70 @@ function CreateTournament() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    console.log('Form submitted!');
+    console.log('Is connected:', isConnected);
+    console.log('Form data:', formData);
+    
     if (!isConnected) {
       alert('Please connect your wallet first');
       return;
     }
-    if (!validateForm()) return;
+    
+    const isValid = validateForm();
+    console.log('Form valid:', isValid);
+    console.log('Validation errors:', errors);
+    
+    if (!isValid) {
+      alert('Please fill in all required fields correctly');
+      return;
+    }
+    
     try {
-      console.log('Creating tournament:', formData);
-      alert('Tournament created successfully! (Mock)');
-      navigate('/tournaments');
+      // Convert dates to timestamps
+      const startTimestamp = Math.floor(new Date(formData.startTime).getTime() / 1000);
+      const endTimestamp = Math.floor(new Date(formData.endTime).getTime() / 1000);
+      
+      // Convert entry fee to wei
+      const entryFeeWei = BigInt(Math.floor(parseFloat(formData.entryFee) * 1e18));
+      
+      console.log('Creating tournament with params:', {
+        name: formData.name,
+        description: formData.description,
+        entryFee: entryFeeWei.toString(),
+        maxParticipants: formData.maxParticipants,
+        startTime: startTimestamp,
+        endTime: endTimestamp
+      });
+      
+      // Call the smart contract
+      await writeContract({
+        address: CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM,
+        abi: TOURNAMENT_PLATFORM_ABI,
+        functionName: 'createTournament',
+        args: [
+          formData.name,
+          formData.description,
+          entryFeeWei,
+          BigInt(formData.maxParticipants),
+          BigInt(startTimestamp),
+          BigInt(endTimestamp)
+        ]
+      });
+      
+      console.log('Transaction submitted!');
     } catch (error) {
       console.error('Error creating tournament:', error);
       alert('Failed to create tournament: ' + error.message);
     }
   };
+  
+  // Handle transaction success
+  if (isSuccess && hash) {
+    console.log('Transaction confirmed!');
+    alert(`Tournament created successfully! View on Etherscan: https://sepolia.etherscan.io/tx/${hash}`);
+    navigate('/tournaments');
+  }
 
   const calculateEstimatedPrizePool = () => {
     const entryFee = parseFloat(formData.entryFee) || 0;
@@ -89,7 +170,23 @@ function CreateTournament() {
       <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#16213e] text-white">
         <div className="max-w-2xl mx-auto my-16 text-center p-12 bg-white/5 rounded-xl border border-white/10">
           <h2 className="mb-4 text-2xl">🔒 Wallet Connection Required</h2>
-          <p className="mb-6 text-white/70">Please connect your wallet to create a tournament</p>
+          {isConnecting ? (
+            <>
+              <div className="mb-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+              </div>
+              <p className="mb-6 text-white/70">Connecting your wallet...</p>
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4">
+                <p className="text-sm text-white/80">
+                  ⚠️ <strong>Taking too long?</strong><br/>
+                  Your ad blocker might be blocking the connection.<br/>
+                  Try disabling it for this site.
+                </p>
+              </div>
+            </>
+          ) : (
+            <p className="mb-6 text-white/70">Please connect your wallet to create a tournament</p>
+          )}
           <button
             className="mt-6 px-8 py-3.5 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-purple-600/40 transition-all"
             onClick={() => navigate('/tournaments')}
@@ -101,8 +198,67 @@ function CreateTournament() {
     );
   }
 
+  if (isWrongNetwork) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#16213e] text-white">
+        <div className="max-w-2xl mx-auto my-16 text-center p-12 bg-white/5 rounded-xl border border-white/10">
+          <h2 className="mb-4 text-2xl">⚠️ Wrong Network</h2>
+          <p className="mb-2 text-white/90 font-semibold">Current Network: {chain?.name || 'Unknown'}</p>
+          <p className="mb-6 text-white/70">This app requires Sepolia Testnet</p>
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-6 mb-6">
+            <p className="text-lg font-semibold mb-4">🔄 Need to Switch Networks</p>
+            <p className="text-sm text-white/80 mb-4">
+              Click the button below to automatically switch to Sepolia Testnet
+            </p>
+            <button
+              onClick={handleSwitchNetwork}
+              disabled={isSwitching}
+              className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg font-semibold text-lg hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/40 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isSwitching ? '🔄 Switching...' : '🔄 Switch to Sepolia Testnet'}
+            </button>
+          </div>
+          <button
+            className="mt-4 px-8 py-3 bg-white/10 border border-white/20 text-white rounded-lg font-semibold hover:bg-white/15 transition-all"
+            onClick={() => navigate('/tournaments')}
+          >
+            ← Back to Tournaments
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#16213e] text-white">
+      {/* Transaction Loading Modal */}
+      {(isPending || isConfirming) && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white/10 border border-purple-600/50 rounded-2xl p-8 max-w-md mx-4 text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-6"></div>
+            <h3 className="text-2xl font-bold mb-4">
+              {isPending ? '⏳ Waiting for Approval...' : '🔄 Creating Tournament...'}
+            </h3>
+            <p className="text-white/70 mb-4">
+              {isPending 
+                ? 'Please approve the transaction in your wallet'
+                : 'Your tournament is being created on the blockchain'
+              }
+            </p>
+            {hash && (
+              <a 
+                href={`https://sepolia.etherscan.io/tx/${hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-cyan-400 hover:text-cyan-300 text-sm underline"
+              >
+                View on Etherscan →
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+      
       <header className="bg-white/5 backdrop-blur-lg border-b border-white/10 p-8 flex items-center gap-8">
         <button
           className="bg-white/10 border border-white/20 text-white px-5 py-2.5 rounded-lg hover:bg-white/15 transition-all"
@@ -176,6 +332,7 @@ function CreateTournament() {
               <div>
                 <label htmlFor="maxParticipants" className="block mb-2 font-medium text-white/90">
                   Max Participants <span className="text-red-400">*</span>
+                  <span className="ml-2 text-sm text-cyan-400">(Max: 50)</span>
                 </label>
                 <input
                   type="number"
@@ -183,8 +340,9 @@ function CreateTournament() {
                   name="maxParticipants"
                   value={formData.maxParticipants}
                   onChange={handleInputChange}
-                  placeholder="100"
+                  placeholder="50"
                   min="2"
+                  max="50"
                   className={`w-full px-3.5 py-3.5 bg-white/10 border rounded-lg text-white transition-all focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 ${errors.maxParticipants ? 'border-red-400' : 'border-white/20'}`}
                 />
                 {errors.maxParticipants && <span className="block text-red-400 text-sm mt-2">{errors.maxParticipants}</span>}

@@ -24,7 +24,14 @@ contract TournamentPlatformTest is Test {
         player3 = makeAddr("player3");
         player4 = makeAddr("player4");
         
-        platform = new TournamentPlatform(treasury);
+        // Deploy WinnerBadge first
+        WinnerBadge winnerBadge = new WinnerBadge();
+        
+        // Deploy TournamentPlatform with both addresses
+        platform = new TournamentPlatform(treasury, address(winnerBadge));
+        
+        // Authorize platform to mint badges
+        winnerBadge.authorizeMinter(address(platform));
         
         // Fund test accounts
         vm.deal(creator, 100 ether);
