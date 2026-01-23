@@ -1,39 +1,36 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useReadContract } from 'wagmi';
-import { CONTRACT_ADDRESSES, TOURNAMENT_PLATFORM_ABI } from '../config/contracts';
+import { useReadContract, useReadContracts } from 'wagmi';
+import { CONTRACT_ADDRESSES, ARCADE_PLATFORM_ABI } from '../config/contracts';
 
 function Leaderboard() {
   const [timeFilter, setTimeFilter] = useState('all-time');
 
   const SEPOLIA_CHAIN_ID = 11155111;
 
-  // Fetch tournament counter
-  const { data: tournamentCounter } = useReadContract({
-    address: CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM,
-    abi: TOURNAMENT_PLATFORM_ABI,
-    functionName: 'tournamentCounter',
+  // Fetch scores from ArcadePlatform
+  const { data: arcadeData } = useReadContract({
+    address: CONTRACT_ADDRESSES.ARCADE_PLATFORM,
+    abi: ARCADE_PLATFORM_ABI,
+    functionName: 'getLeaderboard',
     chainId: SEPOLIA_CHAIN_ID,
   });
 
-  // For now, show placeholder leaderboard since we need to aggregate data from multiple tournaments
-  // In production, you'd want a backend service to aggregate this data
   const leaderboard = useMemo(() => {
-    // Static placeholder data to avoid React Compiler warnings about impure functions
-    const placeholderData = [
-      { rank: 1, address: '0xAbCd1234...5678', tournaments: 5, totalWinnings: '1.234', avgRank: 2, winRate: 75 },
-      { rank: 2, address: '0xDeFg5678...9abc', tournaments: 4, totalWinnings: '0.892', avgRank: 3, winRate: 68 },
-      { rank: 3, address: '0xHiJk9012...3def', tournaments: 3, totalWinnings: '0.567', avgRank: 4, winRate: 55 },
-      { rank: 4, address: '0xLmNo3456...7ghi', tournaments: 4, totalWinnings: '0.445', avgRank: 5, winRate: 50 },
-      { rank: 5, address: '0xPqRs7890...1jkl', tournaments: 2, totalWinnings: '0.334', avgRank: 6, winRate: 45 },
-      { rank: 6, address: '0xTuVw1234...5mno', tournaments: 3, totalWinnings: '0.289', avgRank: 7, winRate: 40 },
-      { rank: 7, address: '0xYzAb5678...9pqr', tournaments: 2, totalWinnings: '0.223', avgRank: 8, winRate: 38 },
-      { rank: 8, address: '0xCdEf9012...3stu', tournaments: 1, totalWinnings: '0.178', avgRank: 9, winRate: 35 },
-      { rank: 9, address: '0xGhIj3456...7vwx', tournaments: 2, totalWinnings: '0.156', avgRank: 10, winRate: 30 },
-      { rank: 10, address: '0xKlMn7890...1yza', tournaments: 1, totalWinnings: '0.112', avgRank: 11, winRate: 25 },
-    ];
-    
-    return tournamentCounter ? placeholderData : [];
-  }, [tournamentCounter]);
+    if (!arcadeData) return [];
+
+    const data = arcadeData.map(item => ({
+      address: item.player,
+      score: Number(item.score),
+      tournaments: 1, 
+      avgRank: 1, 
+      winRate: 100
+    }));
+
+    return data.sort((a, b) => b.score - a.score).map((item, index) => ({
+      ...item,
+      rank: index + 1
+    }));
+  }, [arcadeData]);
 
   const topThree = leaderboard.slice(0, 3);
   const rest = leaderboard.slice(3);
@@ -44,9 +41,9 @@ function Leaderboard() {
         {/* Page Header */}
         <div className="mb-8 animate-slide-up">
           <h1 className="m-0 text-4xl md:text-5xl font-black text-gradient">🎯 Global Leaderboard</h1>
-          <p className="mt-2 text-lg text-white/70">Top players ranked by their tournament performance</p>
+          <p className="mt-2 text-lg text-white/70">Top players ranked by their Arcade High Scores</p>
           <div className="mt-4 glass rounded-lg p-4 border border-yellow-500/30">
-            <p className="text-yellow-400">ℹ️ <strong>Note:</strong> Currently showing placeholder data. Full leaderboard aggregation requires a backend service to collect scores from all tournaments.</p>
+            <p className="text-yellow-400">ℹ️ <strong>Global Arcade Leaderboard:</strong> Showing top scores from Free-to-Play Arcade Mode.</p>
           </div>
         </div>
 
@@ -78,8 +75,8 @@ function Leaderboard() {
               <div className="mb-3 font-mono text-lg">{topThree[1]?.address}</div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="glass p-3 rounded-lg">
-                  <p className="text-white/60 mb-1">Winnings</p>
-                  <p className="font-bold text-cyan-400">{topThree[1]?.totalWinnings} ETH</p>
+                  <p className="text-white/60 mb-1">High Score</p>
+                  <p className="font-bold text-cyan-400">{topThree[1]?.score}</p>
                 </div>
                 <div className="glass p-3 rounded-lg">
                   <p className="text-white/60 mb-1">Tournaments</p>
@@ -95,8 +92,8 @@ function Leaderboard() {
               <div className="mb-3 font-mono text-xl font-bold">{topThree[0]?.address}</div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="glass p-3 rounded-lg">
-                  <p className="text-white/60 mb-1">Winnings</p>
-                  <p className="font-bold text-cyan-400">{topThree[0]?.totalWinnings} ETH</p>
+                  <p className="text-white/60 mb-1">High Score</p>
+                  <p className="font-bold text-cyan-400">{topThree[0]?.score}</p>
                 </div>
                 <div className="glass p-3 rounded-lg">
                   <p className="text-white/60 mb-1">Tournaments</p>
@@ -112,8 +109,8 @@ function Leaderboard() {
               <div className="mb-3 font-mono text-lg">{topThree[2]?.address}</div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="glass p-3 rounded-lg">
-                  <p className="text-white/60 mb-1">Winnings</p>
-                  <p className="font-bold text-cyan-400">{topThree[2]?.totalWinnings} ETH</p>
+                  <p className="text-white/60 mb-1">High Score</p>
+                  <p className="font-bold text-cyan-400">{topThree[2]?.score}</p>
                 </div>
                 <div className="glass p-3 rounded-lg">
                   <p className="text-white/60 mb-1">Tournaments</p>
@@ -132,7 +129,7 @@ function Leaderboard() {
                   <th className="py-4 px-6 text-left font-bold text-white/90">Rank</th>
                   <th className="py-4 px-6 text-left font-bold text-white/90">Player</th>
                   <th className="py-4 px-6 text-left font-bold text-white/90">Tournaments</th>
-                  <th className="py-4 px-6 text-left font-bold text-white/90">Total Winnings</th>
+                  <th className="py-4 px-6 text-left font-bold text-white/90">High Score</th>
                   <th className="py-4 px-6 text-left font-bold text-white/90">Avg. Rank</th>
                   <th className="py-4 px-6 text-left font-bold text-white/90">Win Rate</th>
                 </tr>
@@ -151,7 +148,7 @@ function Leaderboard() {
                     </td>
                     <td className="py-4 px-6 font-mono font-semibold">{player.address}</td>
                     <td className="py-4 px-6 font-semibold">{player.tournaments}</td>
-                    <td className="py-4 px-6 font-black text-gradient">{player.totalWinnings} ETH</td>
+                    <td className="py-4 px-6 font-black text-gradient">{player.score}</td>
                     <td className="py-4 px-6 font-semibold">{player.avgRank}</td>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
@@ -172,7 +169,7 @@ function Leaderboard() {
         </div>
 
         <div className="mt-8 text-center text-white/60">
-          <p>Showing {leaderboard.length} players • Aggregated from {tournamentCounter?.toString() || 0} tournaments</p>
+          <p>Showing {leaderboard.length} players • Global Arcade Rankings</p>
         </div>
       </div>
     </div>

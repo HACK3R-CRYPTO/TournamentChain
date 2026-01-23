@@ -51,6 +51,20 @@ function MyTournaments() {
     chainId: SEPOLIA_CHAIN_ID,
   });
 
+  // Fetch user scores for joined tournaments
+  const { data: scoresData } = useReadContracts({
+    contracts: playerTournamentIds?.map(id => ({
+      address: CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM,
+      abi: TOURNAMENT_PLATFORM_ABI,
+      functionName: 'getParticipantScore',
+      args: [id, address],
+      chainId: SEPOLIA_CHAIN_ID,
+    })) || [],
+    query: {
+      enabled: !!playerTournamentIds && !!address,
+    }
+  });
+
   const { data: tournamentsData } = useReadContracts({
     contracts: tournamentCalls,
     query: {
@@ -65,6 +79,17 @@ function MyTournaments() {
     const joined = [];
     const created = [];
     const playerIdSet = new Set(playerTournamentIds?.map(id => Number(id)) || []);
+    
+    // Create a map of scores for easier lookup
+    const scoresMap = {};
+    if (playerTournamentIds && scoresData) {
+        playerTournamentIds.forEach((id, index) => {
+            const result = scoresData[index];
+            if (result && result.status === 'success') {
+                scoresMap[Number(id)] = result.result;
+            }
+        });
+    }
 
     tournamentsData.forEach((item) => {
       if (item.status !== 'success' || !item.result) return;
@@ -72,6 +97,9 @@ function MyTournaments() {
       const tournament = item.result;
       const statusMap = ['UPCOMING', 'LIVE', 'ENDED', 'CANCELLED'];
       const tournamentId = Number(tournament.id);
+      
+      const userScoreData = scoresMap[tournamentId];
+      const myScore = userScoreData ? Number(userScoreData.score) : 0;
       
       const processedTournament = {
         id: tournamentId,
@@ -81,10 +109,14 @@ function MyTournaments() {
         entryFee: formatEther(tournament.entryFee),
         prizePool: formatEther(tournament.prizePool),
         maxParticipants: Number(tournament.maxParticipants),
-        currentParticipants: 0,
+        currentParticipants: 0, // TODO: Fetch real participant count if needed
         status: statusMap[tournament.status] || 'UPCOMING',
         startTime: Number(tournament.startTime) * 1000,
         endTime: Number(tournament.endTime) * 1000,
+        myScore: myScore,
+        myRank: null, // Rank requires fetching all scores, skipping for now
+        potentialPrize: '0', // Mock
+        claimed: false, // Mock
       };
 
       const isCreator = tournament.creator.toLowerCase() === address.toLowerCase();
@@ -95,14 +127,14 @@ function MyTournaments() {
         created.push(processedTournament);
       }
       
-      // Add to joined if user joined (but not creator, to avoid duplicates)
-      if (hasJoined && !isCreator) {
+      // Add to joined if user joined
+      if (hasJoined) {
         joined.push(processedTournament);
       }
     });
 
     return { joined, created };
-  }, [tournamentsData, address, playerTournamentIds]);
+  }, [tournamentsData, address, playerTournamentIds, scoresData]);
 
   useEffect(() => {
     console.log('=== Contract Read Status ===');

@@ -7,53 +7,53 @@ function LandingPage() {
   const features = [
     {
       icon: '🎮',
-      title: 'All Games Welcome',
-      description: 'Support for Web2 games (CODM, eFootball, EA Sports) and Web3 games - one platform for everything'
+      title: 'Wave Defense Game',
+      description: 'Play our fully integrated survival shooter. Survive waves, kill enemies, and set high scores.'
     },
     {
       icon: '⚡',
-      title: 'Instant Payouts',
+      title: 'Smart Contract Payouts',
       description: 'Automatic prize distribution powered by blockchain technology for fast, secure rewards'
     },
     {
       icon: '✅',
-      title: 'Verifiable Results',
-      description: 'All scores and results stored on-chain for complete transparency and fairness'
+      title: 'Transparent Scoring',
+      description: 'All scores and tournament results are stored on-chain for complete transparency and fairness'
     },
     {
       icon: '🌍',
-      title: 'Global Platform',
-      description: 'Host tournaments for any game - mobile, PC, console - reach players worldwide'
+      title: 'Global Tournaments',
+      description: 'Compete against players worldwide in daily and weekly tournaments'
     },
     {
-      icon: '🏆',
-      title: 'Easy Tournament Creation',
-      description: 'Create and manage tournaments in minutes with our simple, powerful tools'
+      icon: '⚔️',
+      title: 'Own Your Assets',
+      description: 'Weapons and Skins are ERC-1155 NFTs that you truly own and can trade'
     },
     {
       icon: '💰',
-      title: 'Flexible Prize Pools',
-      description: 'Set custom prize distributions and entry fees - you control the economics'
+      title: 'Play to Earn',
+      description: 'Win Gold and Diamonds to mint exclusive items and participate in high-stakes events'
     }
   ];
 
   const steps = [
     {
       number: '01',
-      title: 'Connect & Join',
-      description: 'Connect your wallet and browse available tournaments. Join by paying the entry fee.',
+      title: 'Connect Wallet',
+      description: 'Connect your crypto wallet (MetaMask, etc.) to access your profile and inventory.',
       icon: '🔗'
     },
     {
       number: '02',
-      title: 'Play & Submit',
-      description: 'Play the game and achieve your best score. Submit your results to the blockchain.',
+      title: 'Play Wave Defense',
+      description: 'Survive endless waves of enemies. Your score is verified and recorded on the blockchain.',
       icon: '🎯'
     },
     {
       number: '03',
-      title: 'Win & Earn',
-      description: 'Top performers automatically receive prizes distributed by smart contracts.',
+      title: 'Win Crypto Prizes',
+      description: 'Top the leaderboard or win tournaments to automatically receive Gold, Diamonds, and NFTs.',
       icon: '💎'
     }
   ];
@@ -84,14 +84,14 @@ function LandingPage() {
 
           {/* Main Headline */}
           <h1 className="text-7xl md:text-8xl font-black mb-6 leading-tight">
-            <span className="text-gradient-gaming">Host.</span>{' '}
+            <span className="text-gradient-gaming">Play.</span>{' '}
             <span className="text-gradient-gold">Compete.</span>{' '}
-            <span className="text-gradient">Win.</span>
+            <span className="text-gradient">Earn.</span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-xl md:text-2xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed">
-            The ultimate gaming tournament platform for ALL games. Host tournaments for CODM, eFootball, EA Sports, and any game you love.
+            Experience the future of Web3 esports. Battle in our flagship <strong>Wave Defense</strong> game, earn real on-chain assets (ERC-1155), and climb the leaderboard for crypto prizes.
           </p>
 
           {/* CTA Buttons */}
@@ -220,10 +220,10 @@ function LandingPage() {
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="text-5xl md:text-7xl font-black mb-8">
-            Ready to <span className="text-gradient-gold">Host</span> Your Tournament?
+            Ready to <span className="text-gradient-gold">Win</span> Big?
           </h2>
           <p className="text-xl md:text-2xl text-white/80 mb-12 leading-relaxed">
-            Join tournament organizers and players from around the world competing in their favorite games
+            Join the tournament, equip your best NFT weapons, and dominate the leaderboard.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
@@ -231,7 +231,7 @@ function LandingPage() {
               to="/tournaments"
               className="group relative px-12 py-6 bg-gradient-to-r from-purple-600 via-purple-700 to-cyan-600 rounded-xl font-black text-xl hover:scale-105 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-600/50 no-underline text-white animate-gradient"
             >
-              <span className="relative z-10">Start Competing Now</span>
+              <span className="relative z-10">Play Now</span>
             </Link>
 
             <Link

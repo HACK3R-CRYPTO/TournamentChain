@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./WinnerBadge.sol";
+import "./GameCurrency.sol";
 
 /**
  * @title TournamentPlatform
@@ -41,6 +42,12 @@ contract TournamentPlatform is Ownable, ReentrancyGuard {
     uint256 public platformFeePercent = 5; // 5% platform fee
     address public platformTreasury;
     WinnerBadge public winnerBadge;
+    GoldToken public goldToken;
+    DiamondToken public diamondToken;
+    
+    // Reward settings
+    uint256 public goldRewardPerWin = 1000 * 10**18;
+    uint256 public diamondRewardPerWin = 50 * 10**18;
     
     // Safety limits
     uint256 public constant MIN_PARTICIPANTS = 2;
@@ -143,11 +150,18 @@ contract TournamentPlatform is Ownable, ReentrancyGuard {
         _;
     }
     
-    constructor(address _treasury, address _winnerBadge) Ownable() {
+    constructor(
+        address _treasury, 
+        address _winnerBadge,
+        address _goldToken,
+        address _diamondToken
+    ) Ownable() {
         require(_treasury != address(0), "Invalid treasury address");
         require(_winnerBadge != address(0), "Invalid badge address");
         platformTreasury = _treasury;
         winnerBadge = WinnerBadge(_winnerBadge);
+        goldToken = GoldToken(_goldToken);
+        diamondToken = DiamondToken(_diamondToken);
     }
     
     /**
@@ -404,18 +418,30 @@ contract TournamentPlatform is Ownable, ReentrancyGuard {
             (bool success1, ) = _sortedParticipants[0].call{value: firstPrize}("");
             require(success1, "First prize transfer failed");
             tournamentWinners[_tournamentId].push(_sortedParticipants[0]);
+            
+            // Mint Gold and Diamonds for 1st place
+            goldToken.mint(_sortedParticipants[0], goldRewardPerWin);
+            diamondToken.mint(_sortedParticipants[0], diamondRewardPerWin);
         }
         
         if (_sortedParticipants.length >= 2) {
             (bool success2, ) = _sortedParticipants[1].call{value: secondPrize}("");
             require(success2, "Second prize transfer failed");
             tournamentWinners[_tournamentId].push(_sortedParticipants[1]);
+
+            // 2nd place gets half rewards
+            goldToken.mint(_sortedParticipants[1], goldRewardPerWin / 2);
+            diamondToken.mint(_sortedParticipants[1], diamondRewardPerWin / 2);
         }
         
         if (_sortedParticipants.length >= 3) {
             (bool success3, ) = _sortedParticipants[2].call{value: thirdPrize}("");
             require(success3, "Third prize transfer failed");
             tournamentWinners[_tournamentId].push(_sortedParticipants[2]);
+
+            // 3rd place gets quarter rewards
+            goldToken.mint(_sortedParticipants[2], goldRewardPerWin / 4);
+            diamondToken.mint(_sortedParticipants[2], diamondRewardPerWin / 4);
         }
         
         // Distribute remaining prize among other participants

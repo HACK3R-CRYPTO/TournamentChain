@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAccount, useWriteContract, useReadContract } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract, useReadContracts, useWaitForTransactionReceipt } from 'wagmi';
 import { CONTRACT_ADDRESSES, TOURNAMENT_PLATFORM_ABI } from '../config/contracts';
 import { formatEther, parseEther } from 'viem';
 
@@ -8,15 +8,25 @@ function TournamentDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { address, isConnected } = useAccount();
-  const { writeContract, isPending } = useWriteContract();
+  const { writeContractAsync, isPending: isWritePending } = useWriteContract();
   const [activeTab, setActiveTab] = useState('overview');
   const [tournament, setTournament] = useState(null);
   const [participants, setParticipants] = useState([]);
+  const [txHash, setTxHash] = useState(null);
 
   const SEPOLIA_CHAIN_ID = 11155111;
 
+  // Wait for transaction receipt
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
   // Fetch tournament data
-  const { data: tournamentData, isLoading: tournamentLoading } = useReadContract({
+  const { 
+    data: tournamentData, 
+    isLoading: tournamentLoading,
+    refetch: refetchTournament 
+  } = useReadContract({
     address: CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM,
     abi: TOURNAMENT_PLATFORM_ABI,
     functionName: 'getTournament',
@@ -25,7 +35,10 @@ function TournamentDetails() {
   });
 
   // Fetch participants
-  const { data: participantsData } = useReadContract({
+  const { 
+    data: participantsData,
+    refetch: refetchParticipants
+  } = useReadContract({
     address: CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM,
     abi: TOURNAMENT_PLATFORM_ABI,
     functionName: 'getTournamentParticipants',
@@ -34,7 +47,10 @@ function TournamentDetails() {
   });
 
   // Check if user has joined
-  const { data: hasJoinedData } = useReadContract({
+  const { 
+    data: hasJoinedData,
+    refetch: refetchHasJoined
+  } = useReadContract({
     address: CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM,
     abi: TOURNAMENT_PLATFORM_ABI,
     functionName: 'hasJoined',
@@ -42,9 +58,44 @@ function TournamentDetails() {
     chainId: SEPOLIA_CHAIN_ID,
   });
 
+  // Refetch data when transaction is confirmed
+  useEffect(() => {
+    if (isConfirmed) {
+      refetchTournament();
+      refetchParticipants();
+      refetchHasJoined();
+      setTxHash(null);
+      alert('Successfully joined tournament!');
+    }
+  }, [isConfirmed, refetchTournament, refetchParticipants, refetchHasJoined]);
+
+  // Fetch all participant scores for leaderboard
+  const { data: scoresData } = useReadContracts({
+    contracts: (participantsData && id) ? participantsData.map(addr => ({
+      address: CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM,
+      abi: TOURNAMENT_PLATFORM_ABI,
+      functionName: 'getParticipantScore',
+      args: [BigInt(id), addr],
+    })) : [],
+    chainId: SEPOLIA_CHAIN_ID,
+  });
+
   useEffect(() => {
     if (tournamentData) {
       const statusMap = ['UPCOMING', 'LIVE', 'ENDED', 'CANCELLED'];
+      let derivedStatus = statusMap[tournamentData.status] || 'UPCOMING';
+      
+      const now = Math.floor(Date.now() / 1000);
+      const startTime = Number(tournamentData.startTime);
+      const endTime = Number(tournamentData.endTime);
+
+      // Auto-update status based on time if not Cancelled/Completed manually
+      if (tournamentData.status === 0 || tournamentData.status === 1) { // Created or Active
+        if (now >= endTime) derivedStatus = 'ENDED';
+        else if (now >= startTime) derivedStatus = 'LIVE';
+        else derivedStatus = 'UPCOMING';
+      }
+
       setTournament({
         id: Number(tournamentData.id),
         name: tournamentData.name,
@@ -54,24 +105,58 @@ function TournamentDetails() {
         prizePool: formatEther(tournamentData.prizePool),
         maxParticipants: Number(tournamentData.maxParticipants),
         currentParticipants: participantsData?.length || 0,
-        status: statusMap[tournamentData.status] || 'UPCOMING',
-        startTime: new Date(Number(tournamentData.startTime) * 1000).toISOString(),
-        endTime: new Date(Number(tournamentData.endTime) * 1000).toISOString(),
+        status: derivedStatus,
+        startTime: new Date(startTime * 1000).toISOString(),
+        endTime: new Date(endTime * 1000).toISOString(),
         resultsSubmitted: tournamentData.resultsSubmitted,
       });
     }
   }, [tournamentData, participantsData]);
 
+  // Force refresh status every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+        if (tournament) {
+            const now = new Date();
+            const start = new Date(tournament.startTime);
+            const end = new Date(tournament.endTime);
+            let newStatus = tournament.status;
+
+            if (tournament.status !== 'CANCELLED' && tournament.status !== 'ENDED') {
+                if (now >= end) newStatus = 'ENDED';
+                else if (now >= start) newStatus = 'LIVE';
+                else newStatus = 'UPCOMING';
+
+                if (newStatus !== tournament.status) {
+                    setTournament(prev => ({ ...prev, status: newStatus }));
+                }
+            }
+        }
+    }, 1000); // Check every second for precise updates
+    return () => clearInterval(interval);
+  }, [tournament]);
+
   useEffect(() => {
     if (participantsData) {
-      setParticipants(participantsData.map((addr, i) => ({
-        id: `p${i + 1}`,
-        address: addr,
-        rank: i + 1,
-        joinedAt: new Date().toISOString(),
-      })));
+      const mappedParticipants = participantsData.map((addr, i) => {
+        const scoreInfo = scoresData?.[i]?.result;
+        return {
+          id: `p${i + 1}`,
+          address: addr,
+          score: scoreInfo ? Number(scoreInfo.score) : 0,
+          survivalTime: scoreInfo ? Number(scoreInfo.survivalTime) : 0,
+          killCount: scoreInfo ? Number(scoreInfo.killCount) : 0,
+          joinedAt: new Date().toISOString(), // Mock joined time
+        };
+      });
+
+      // Sort by score descending
+      mappedParticipants.sort((a, b) => b.score - a.score);
+      
+      // Update ranks after sorting
+      setParticipants(mappedParticipants.map((p, i) => ({ ...p, rank: i + 1 })));
     }
-  }, [participantsData]);
+  }, [participantsData, scoresData]);
 
   const hasJoined = hasJoinedData || false;
 
@@ -110,28 +195,48 @@ function TournamentDetails() {
     if (!tournament) return;
 
     try {
-      await writeContract({
+      const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.TOURNAMENT_PLATFORM,
         abi: TOURNAMENT_PLATFORM_ABI,
         functionName: 'joinTournament',
         args: [BigInt(id)],
         value: parseEther(tournament.entryFee),
       });
-      alert('Successfully joined tournament!');
+      setTxHash(hash);
     } catch (error) {
       console.error('Error joining tournament:', error);
-      alert('Failed to join tournament: ' + error.message);
+      alert('Failed to join tournament: ' + (error.message || error));
     }
   };
 
   const getTimeRemaining = () => {
     const now = new Date();
+    const start = new Date(tournament.startTime);
     const end = new Date(tournament.endTime);
-    const diff = end - now;
-    if (diff <= 0) return 'Ended';
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    return `${days}d ${hours}h remaining`;
+
+    // If upcoming
+    if (now < start) {
+        const diff = start - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (days > 0) return `Starts in ${days}d ${hours}h`;
+        return `Starts in ${hours}h ${minutes}m`;
+    }
+
+    // If live
+    if (now >= start && now < end) {
+        const diff = end - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (days > 0) return `${days}d ${hours}h left`;
+        return `${hours}h ${minutes}m left`;
+    }
+
+    return 'Ended';
   };
 
   const getStatusColor = () => {
@@ -168,18 +273,38 @@ function TournamentDetails() {
               <p className="text-white/80 text-lg max-w-2xl">{tournament.description}</p>
             </div>
 
-            {!hasJoined && (tournament.status === 'LIVE' || tournament.status === 'UPCOMING') && (
+            {!hasJoined && tournament.status === 'UPCOMING' && (
               <button
                 className="min-w-[200px] px-8 py-3.5 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-purple-600/40 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={handleJoin}
-                disabled={isPending}
+                disabled={isWritePending || isConfirming}
               >
-                {isPending ? 'Joining...' : `Join (${tournament.entryFee} ETH)`}
+                {isWritePending ? 'Check Wallet...' : isConfirming ? 'Confirming...' : `Join (${tournament.entryFee} ETH)`}
               </button>
             )}
+            {!hasJoined && tournament.status === 'LIVE' && (
+               <div className="px-8 py-3.5 bg-red-500/20 border-2 border-red-500 text-red-400 rounded-lg font-semibold">
+                  Registration Closed
+               </div>
+            )}
             {hasJoined && (
-              <div className="px-8 py-3.5 bg-green-500/20 border-2 border-green-500 text-green-400 rounded-lg font-semibold">
-                ✓ Joined
+              <div className="flex gap-4">
+                <div className="px-8 py-3.5 bg-green-500/20 border-2 border-green-500 text-green-400 rounded-lg font-semibold">
+                  ✓ Joined
+                </div>
+                {tournament.status === 'LIVE' && (
+                  <button
+                    className="px-8 py-3.5 bg-gradient-to-r from-yellow-500 to-yellow-700 text-white rounded-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-yellow-600/40 transition-all animate-pulse"
+                    onClick={() => navigate(`/play/${id}`)}
+                  >
+                    🎮 Play Game
+                  </button>
+                )}
+                {tournament.status === 'UPCOMING' && (
+                  <div className="px-8 py-3.5 bg-yellow-500/20 border-2 border-yellow-500 text-yellow-400 rounded-lg font-semibold flex items-center gap-2">
+                    ⏳ Game Starts Soon
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -200,6 +325,24 @@ function TournamentDetails() {
             <div className="bg-white/5 p-5 rounded-lg border border-white/10">
               <p className="text-white/60 text-sm mb-2">Time Left</p>
               <p className="text-2xl font-bold text-gradient">{getTimeRemaining()}</p>
+            </div>
+          </div>
+
+          <div className="mt-6 flex gap-4 p-4 bg-purple-600/10 rounded-xl border border-purple-500/20">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">💰</span>
+              <div>
+                <p className="text-xs text-white/50 uppercase">Winner Rewards</p>
+                <p className="font-bold text-yellow-400">+1,000 GOLD & 50 DIAMONDS</p>
+              </div>
+            </div>
+            <div className="w-px bg-white/10 mx-2" />
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🛡️</span>
+              <div>
+                <p className="text-xs text-white/50 uppercase">Participation</p>
+                <p className="font-bold text-cyan-400">NFT Winner Badge (Top 10)</p>
+              </div>
             </div>
           </div>
         </div>
@@ -295,29 +438,49 @@ function TournamentDetails() {
 
             {activeTab === 'leaderboard' && (
               <div>
-                <h3 className="mb-4 text-xl font-semibold">Tournament Participants</h3>
-                <p className="mb-4 text-white/60">Scores will be displayed once submitted by participants</p>
-                <div className="space-y-3">
+                <h3 className="mb-4 text-xl font-semibold">Tournament Leaderboard</h3>
+                <p className="mb-6 text-white/60">Top players ranked by their submitted scores</p>
+                <div className="space-y-4">
                   {participants.length > 0 ? (
                     participants.map((participant, index) => (
                       <div
                         key={participant.id}
-                        className="flex items-center justify-between p-5 rounded-lg border bg-white/5 border-white/10"
+                        className={`flex items-center justify-between p-5 rounded-lg border transition-all ${
+                          index === 0 
+                            ? 'bg-gradient-to-r from-yellow-500/10 to-yellow-500/5 border-yellow-500/30' 
+                            : 'bg-white/5 border-white/10'
+                        }`}
                       >
                         <div className="flex items-center gap-6">
-                          <div className="text-2xl min-w-[50px] text-center font-bold">
+                          <div className={`text-2xl min-w-[50px] text-center font-bold ${
+                            index === 0 ? 'text-yellow-400' : 
+                            index === 1 ? 'text-gray-300' : 
+                            index === 2 ? 'text-orange-400' : 'text-white/40'
+                          }`}>
                             #{index + 1}
                           </div>
                           <div>
-                            <p className="font-mono font-semibold mb-1">{participant.address}</p>
-                            <p className="text-white/60 text-sm">Tournament participant</p>
+                            <p className="font-mono font-semibold mb-1 flex items-center gap-2">
+                              {participant.address}
+                              {index === 0 && <span title="Current Leader">👑</span>}
+                            </p>
+                            <div className="flex gap-4 text-sm text-white/50">
+                              <span>Survival: {participant.survivalTime}s</span>
+                              <span>Kills: {participant.killCount}</span>
+                            </div>
                           </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-white/40 uppercase tracking-wider mb-1">Score</p>
+                          <p className={`text-3xl font-bold ${index === 0 ? 'text-yellow-400' : 'text-gradient'}`}>
+                            {participant.score.toLocaleString()}
+                          </p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-white/60">
-                      <p>No participants yet. Be the first to join!</p>
+                    <div className="text-center py-12 bg-white/5 rounded-xl border border-dashed border-white/20">
+                      <p className="text-white/40">No participants yet. Be the first to join!</p>
                     </div>
                   )}
                 </div>

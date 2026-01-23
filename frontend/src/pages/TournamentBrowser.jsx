@@ -33,7 +33,7 @@ function TournamentBrowser() {
   }, [tournamentCounter, counterLoading, counterError]);
 
   // Build array of contract calls to fetch all tournaments
-  const tournamentIds = tournamentCounter ? Array.from({ length: Number(tournamentCounter) }, (_, i) => i + 1) : [];
+  const tournamentIds = tournamentCounter ? Array.from({ length: Number(tournamentCounter) }, (_, i) => i) : [];
   const tournamentCalls = tournamentIds.map(id => ({
     address: TOURNAMENT_CONTRACT_ADDRESS,
     abi: TOURNAMENT_PLATFORM_ABI,
@@ -108,16 +108,39 @@ function TournamentBrowser() {
     return true;
   });
 
-  const formatTimeRemaining = (timestamp) => {
+  const formatTimeRemaining = (startTime, endTime, status) => {
     const now = Date.now();
-    const diff = timestamp - now;
-    if (diff < 0) return 'Ended';
-    const days = Math.floor(diff / 86400000);
-    const hours = Math.floor((diff % 86400000) / 3600000);
-    const minutes = Math.floor((diff % 3600000) / 60000);
-    if (days > 0) return `${days}d ${hours}h`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
+    
+    // If tournament has ended or is cancelled
+    if (status === 'ENDED' || status === 'CANCELLED') {
+        return 'Ended';
+    }
+
+    // If upcoming (not started yet)
+    if (now < startTime) {
+        const diff = startTime - now;
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor((diff % 86400000) / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        
+        if (days > 0) return `Starts in ${days}d ${hours}h`;
+        if (hours > 0) return `Starts in ${hours}h ${minutes}m`;
+        return `Starts in ${minutes}m`;
+    }
+
+    // If live (started but not ended)
+    if (now >= startTime && now < endTime) {
+        const diff = endTime - now;
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor((diff % 86400000) / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        
+        if (days > 0) return `${days}d ${hours}h left`;
+        if (hours > 0) return `${hours}h ${minutes}m left`;
+        return `${minutes}m left`;
+    }
+
+    return 'Ended';
   };
 
   const getStatusBadge = (status) => {
@@ -265,10 +288,10 @@ function TournamentBrowser() {
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-xs text-white/50 uppercase tracking-wider">
-                          {tournament.status === 'active' ? 'Ends In' : 'Starts In'}
+                          {Date.now() >= tournament.startTime && Date.now() < tournament.endTime ? 'Ends In' : 'Status'}
                         </span>
                         <span className="text-base font-semibold text-white">
-                          {formatTimeRemaining(tournament.status === 'active' ? tournament.endTime : tournament.startTime)}
+                          {formatTimeRemaining(tournament.startTime, tournament.endTime, tournament.status)}
                         </span>
                       </div>
                     </div>

@@ -3,7 +3,10 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
 import "../src/WinnerBadge.sol";
+import "../src/GameCurrency.sol";
+import "../src/GameAssets.sol";
 import "../src/TournamentPlatform.sol";
+import "../src/GameLottery.sol";
 
 contract DeployScript is Script {
     function run() external {
@@ -16,25 +19,60 @@ contract DeployScript is Script {
         
         vm.startBroadcast(deployerPrivateKey);
         
-        // 1. Deploy WinnerBadge first
-        console.log("\n1. Deploying WinnerBadge...");
+        // 1. Deploy Tokens
+        console.log("\n1. Deploying GoldToken...");
+        GoldToken goldToken = new GoldToken();
+        console.log("GoldToken deployed at:", address(goldToken));
+
+        console.log("\n2. Deploying DiamondToken...");
+        DiamondToken diamondToken = new DiamondToken();
+        console.log("DiamondToken deployed at:", address(diamondToken));
+
+        // 2. Deploy Game Assets (ERC1155)
+        console.log("\n3. Deploying GameAssets...");
+        GameAssets gameAssets = new GameAssets();
+        console.log("GameAssets deployed at:", address(gameAssets));
+
+        // 3. Deploy WinnerBadge (ERC721)
+        console.log("\n4. Deploying WinnerBadge...");
         WinnerBadge winnerBadge = new WinnerBadge();
         console.log("WinnerBadge deployed at:", address(winnerBadge));
         
-        // 2. Deploy TournamentPlatform with treasury and badge address
-        console.log("\n2. Deploying TournamentPlatform...");
-        address treasury = deployer; // Use deployer as treasury for now
+        // 4. Deploy TournamentPlatform
+        console.log("\n5. Deploying TournamentPlatform...");
+        address treasury = deployer; // Use deployer as treasury
         TournamentPlatform platform = new TournamentPlatform(
             treasury,
-            address(winnerBadge)
+            address(winnerBadge),
+            address(goldToken),
+            address(diamondToken)
         );
         console.log("TournamentPlatform deployed at:", address(platform));
-        console.log("Treasury address:", treasury);
         
-        // 3. Authorize TournamentPlatform to mint badges
-        console.log("\n3. Authorizing TournamentPlatform to mint badges...");
+        // 5. Deploy GameLottery
+        console.log("\n6. Deploying GameLottery...");
+        GameLottery lottery = new GameLottery(
+            address(diamondToken),
+            address(goldToken),
+            address(gameAssets),
+            treasury
+        );
+        console.log("GameLottery deployed at:", address(lottery));
+
+        // 6. Setup Permissions
+        console.log("\n7. Setting up permissions...");
+        
+        // TournamentPlatform needs to mint Badges, Gold, and Diamonds
         winnerBadge.authorizeMinter(address(platform));
-        console.log("TournamentPlatform authorized as minter");
+        goldToken.addMinter(address(platform));
+        diamondToken.addMinter(address(platform));
+        
+        // GameLottery needs to mint Gold, Diamonds, and Assets
+        goldToken.addMinter(address(lottery));
+        diamondToken.addMinter(address(lottery));
+        gameAssets.addMinter(address(lottery));
+
+        console.log("Permissions configured successfully");
         
         vm.stopBroadcast();
         
@@ -44,14 +82,13 @@ contract DeployScript is Script {
         console.log("========================================");
         console.log("Network: Sepolia Testnet");
         console.log("Deployer:", deployer);
+        console.log("GoldToken:", address(goldToken));
+        console.log("DiamondToken:", address(diamondToken));
+        console.log("GameAssets:", address(gameAssets));
         console.log("WinnerBadge:", address(winnerBadge));
         console.log("TournamentPlatform:", address(platform));
+        console.log("GameLottery:", address(lottery));
         console.log("Treasury:", treasury);
-        console.log("========================================");
-        console.log("\nNext steps:");
-        console.log("1. Verify contracts on Etherscan");
-        console.log("2. Update frontend with contract addresses");
-        console.log("3. Test on Sepolia testnet");
         console.log("========================================");
     }
 }

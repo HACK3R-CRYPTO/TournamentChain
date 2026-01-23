@@ -1,12 +1,24 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
 function MiniGames() {
     const { isConnected } = useAccount();
+    const navigate = useNavigate();
     const [selectedCategory, setSelectedCategory] = useState('all');
 
     const games = [
+        {
+            id: 'wave-defense',
+            title: 'Wave Defense',
+            description: 'Defend your base from waves of increasingly difficult enemies in this survival action game.',
+            category: 'action',
+            players: '5,123',
+            image: '🛡️',
+            difficulty: 'Hard',
+            path: '/play-solo',
+            comingSoon: false
+        },
         {
             id: 1,
             title: 'Puzzle Master',
@@ -14,7 +26,8 @@ function MiniGames() {
             category: 'puzzle',
             players: '1,234',
             image: '🧩',
-            difficulty: 'Medium'
+            difficulty: 'Medium',
+            comingSoon: true
         },
         {
             id: 2,
@@ -23,7 +36,8 @@ function MiniGames() {
             category: 'arcade',
             players: '2,456',
             image: '🏎️',
-            difficulty: 'Easy'
+            difficulty: 'Easy',
+            comingSoon: true
         },
         {
             id: 3,
@@ -32,7 +46,8 @@ function MiniGames() {
             category: 'puzzle',
             players: '3,789',
             image: '🎴',
-            difficulty: 'Easy'
+            difficulty: 'Easy',
+            comingSoon: true
         },
         {
             id: 4,
@@ -41,7 +56,8 @@ function MiniGames() {
             category: 'action',
             players: '5,123',
             image: '🚀',
-            difficulty: 'Hard'
+            difficulty: 'Hard',
+            comingSoon: true
         },
         {
             id: 5,
@@ -50,16 +66,8 @@ function MiniGames() {
             category: 'puzzle',
             players: '987',
             image: '📝',
-            difficulty: 'Medium'
-        },
-        {
-            id: 6,
-            title: 'Tower Defense',
-            description: 'Build towers and defend your base from waves of enemies',
-            category: 'strategy',
-            players: '4,567',
-            image: '🏰',
-            difficulty: 'Hard'
+            difficulty: 'Medium',
+            comingSoon: true
         }
     ];
 
@@ -84,6 +92,14 @@ function MiniGames() {
         }
     };
 
+    const handlePlay = (game) => {
+        if (game.path && !game.comingSoon) {
+            navigate(game.path);
+        } else {
+            // No action needed as button is disabled or shows coming soon
+        }
+    };
+
     return (
         <div className="min-h-screen py-8 px-4">
             <div className="max-w-7xl mx-auto">
@@ -93,7 +109,7 @@ function MiniGames() {
                         🎮 Mini Games
                     </h1>
                     <p className="text-xl text-white/70 max-w-2xl mx-auto">
-                        Take a break and enjoy our collection of fun mini games. Play solo or compete with friends!
+                        Compete in the Wave Defense tournament to climb the leaderboard and win rewards!
                     </p>
                 </div>
 
@@ -118,8 +134,17 @@ function MiniGames() {
                     {filteredGames.map(game => (
                         <div
                             key={game.id}
-                            className="glass rounded-2xl p-6 border border-white/10 hover:border-purple-500/50 transition-all hover:transform hover:scale-105"
+                            className={`glass rounded-2xl p-6 border transition-all ${game.comingSoon 
+                                ? 'opacity-75 grayscale border-white/5 cursor-not-allowed' 
+                                : 'border-white/10 hover:border-purple-500/50 hover:transform hover:scale-105'}`}
                         >
+                            {/* Coming Soon Badge */}
+                            {game.comingSoon && (
+                                <div className="absolute top-4 right-4 bg-yellow-500/20 text-yellow-500 text-[10px] font-bold px-2 py-1 rounded border border-yellow-500/30 uppercase tracking-widest z-10">
+                                    Coming Soon
+                                </div>
+                            )}
+
                             {/* Game Icon */}
                             <div className="text-6xl mb-4 text-center">
                                 {game.image}
@@ -146,8 +171,14 @@ function MiniGames() {
 
                             {/* Play Button */}
                             {isConnected ? (
-                                <button className="w-full bg-gradient-to-r from-purple-600 to-purple-800 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-600/40 transition-all">
-                                    Play Now
+                                <button 
+                                    onClick={() => handlePlay(game)}
+                                    disabled={game.comingSoon}
+                                    className={`w-full px-6 py-3 rounded-lg font-semibold transition-all ${game.comingSoon
+                                        ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-purple-600 to-purple-800 text-white hover:shadow-lg hover:shadow-purple-600/40'}`}
+                                >
+                                    {game.comingSoon ? 'Coming Soon' : 'Play Now'}
                                 </button>
                             ) : (
                                 <div className="text-center">

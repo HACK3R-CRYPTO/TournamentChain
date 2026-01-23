@@ -11,7 +11,7 @@ The game and platform work together seamlessly. Players start by playing the gam
 
 Project Overview
 
-TournamentChain consists of two integrated components. Component one is a top-down survival shooter game built with React. The game features Web3 asset ownership. The game features on-chain scoring. The game features play-to-earn mechanics. Component two is a smart contract-based tournament platform. The platform manages tournament creation. The platform manages entry fees. The platform manages result verification. The platform manages automatic prize distribution. The game uses the platform for competitions. The platform works with any Web3 game. Together they form a complete Web3 gaming ecosystem.
+TournamentChain consists of two integrated components. Component one is a top-down survival shooter game (Wave Defense) built with React. The game features Web3 asset ownership. The game features on-chain scoring. The game features play-to-earn mechanics. Component two is a smart contract-based tournament platform. The platform manages tournament creation. The platform manages entry fees. The platform manages result verification. The platform manages automatic prize distribution. The game uses the platform for competitions. The platform works with any Web3 game. Together they form a complete Web3 gaming ecosystem.
 
 Game Design
 
@@ -51,11 +51,11 @@ Players earn gold from gameplay. Players earn gold from kills. Players earn diam
 
 Weapon System
 
-Multiple weapon types available. Weapons have different stats. Fire rate varies by weapon. Damage varies by weapon. Range varies by weapon. Players unlock weapons through gameplay. Players purchase weapons with gold. Players upgrade weapons with gold. Weapon upgrades improve stats. Rare weapons available through lottery.
+Multiple weapon types available (e.g., Starter Pistol, Plasma Rifle, Void Cannon, Cyber Sword). Weapons have different stats. Fire rate varies by weapon. Damage varies by weapon. Range varies by weapon. Players unlock weapons through gameplay. Players purchase weapons with gold. Players upgrade weapons with gold. Weapon upgrades improve stats. Rare weapons available through lottery.
 
 Character System
 
-Multiple character skins available. Skins have different base stats. Health varies by character. Speed varies by character. Damage multiplier varies by character. Players purchase skins with gold. Players upgrade skins with gold. Skin upgrades improve base stats. Character selection affects gameplay strategy.
+Multiple character skins available (e.g., Default, Neon Ninja, Cyber Punk). Skins have different base stats. Health varies by character. Speed varies by character. Damage multiplier varies by character. Players purchase skins with gold. Players upgrade skins with gold. Skin upgrades improve base stats. Character selection affects gameplay strategy.
 
 Lottery System
 
@@ -85,7 +85,7 @@ Gold exists as ERC-20 token. Diamonds exist as ERC-20 token. Currency balances s
 
 Leaderboard On-Chain
 
-Top scores stored in smart contract. Binary search algorithm sorts efficiently. Top ten players display publicly. Leaderboard updates automatically. Cross-chain support through UEA. Players compete across networks.
+Top scores stored in smart contract. Top ten players display publicly. Leaderboard updates automatically. Players compete across networks.
 
 Tournament Integration
 
@@ -93,7 +93,7 @@ Game connects to tournament platform. Players join tournaments before playing. G
 
 React Web3 Connection
 
-React components use Web3 hooks directly. useWeb3React provides wallet connection. useContract provides contract reading. useContractWrite provides contract writing. Game components access these hooks. No external helper files needed. Integration happens in React components.
+React components use Web3 hooks directly. useAccount provides wallet connection. useReadContract provides contract reading. useWriteContract provides contract writing. Game components access these hooks. No external helper files needed. Integration happens in React components.
 
 Player connects wallet through React component. Wallet connection updates React state. Game components read from state. Assets load through contract hooks. Weapons display through React components. Skins display through React components. Currency displays through React components.
 
@@ -161,10 +161,6 @@ Decentralized Game Infrastructure
 
 Tournament rules exist on-chain. Results verify on-chain. Prize pools escrow automatically. Payouts execute automatically. No central authority controls funds. Works with any Web3 game.
 
-Metaverse and Virtual World Building
-
-Cross-game tournaments enable interoperability. Community-driven events. Virtual tournament lobbies. Players compete across games.
-
 Technical Architecture
 
 Game Framework
@@ -173,7 +169,7 @@ React powers the game client. Custom game components handle gameplay. React stat
 
 Smart Contracts
 
-TournamentPlatform.sol manages tournaments. ZKGameClient.sol handles game state. ERC-1155 contracts manage assets. Contracts deploy to Ethereum-compatible chains.
+TournamentPlatform.sol manages tournaments. ArcadePlatform.sol handles free-to-play scores. GameAssets.sol manages ERC-1155 items. GameCurrency.sol manages ERC-20 tokens. GameLottery.sol handles randomness. Contracts deploy to Ethereum-compatible chains.
 
 Frontend
 
@@ -181,7 +177,7 @@ React application for entire project. React handles game UI. React handles tourn
 
 Blockchain Network
 
-Ethereum-compatible chain. Not Push network. Supports MetaMask. Supports WalletConnect. Supports any EIP-1193 wallet.
+Ethereum-compatible chain (e.g., Sepolia Testnet). Supports MetaMask. Supports WalletConnect. Supports any EIP-1193 wallet.
 
 Core Features
 

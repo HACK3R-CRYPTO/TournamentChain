@@ -1,8 +1,109 @@
 // Contract addresses deployed on Sepolia testnet
 export const CONTRACT_ADDRESSES = {
-  WINNER_BADGE: '0x0fC01Df600f960d94A2196913bD3a0F2577eF168',
-  TOURNAMENT_PLATFORM: '0xcE11B94ccE5DdDaE8556C83F6b1b7c241862a165'
+  WINNER_BADGE: '0xb3e19d1215423abadb0a9105c61618aec6b02be6',
+  TOURNAMENT_PLATFORM: '0x14b2303f4eb388e2842e61f1e3b88bcadee3cc73',
+  GOLD_TOKEN: '0x0bd3180bd740e8fb560329ea42f46f65aa5b242d',
+  DIAMOND_TOKEN: '0xc6d677f0fcb8343ee09063b6849aa40e1fc99bc5',
+  GAME_ASSETS: '0xa1dbb68470cce59218e8495f5350ffc8c8e36110',
+  GAME_LOTTERY: '0xd06fce565798942949ae735f5e588fbf9e96afda',
+  ARCADE_PLATFORM: '0x214124ae23b415b3AEA3bb9e260A56dc022bAf04'
 };
+
+export const GAME_LOTTERY_ABI = [
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "player", "type": "address" },
+      { "indexed": false, "internalType": "enum GameLottery.PrizeType", "name": "pType", "type": "uint8" },
+      { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "assetId", "type": "uint256" },
+      { "indexed": false, "internalType": "string", "name": "assetName", "type": "string" }
+    ],
+    "name": "PrizeWon",
+    "type": "event"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "_ticketCount", "type": "uint256" }],
+    "name": "enterLottery",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ticketPrice",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+];
+
+export const GAME_ASSETS_ABI = [
+  {
+    "inputs": [
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" },
+      { "internalType": "string", "name": "name", "type": "string" },
+      { "internalType": "uint256", "name": "assetType", "type": "uint256" },
+      { "internalType": "bytes", "name": "data", "type": "bytes" }
+    ],
+    "name": "mintAsset",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "account", "type": "address" },
+      { "internalType": "uint256", "name": "id", "type": "uint256" }
+    ],
+    "name": "balanceOf",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+];
+
+export const ERC20_ABI = [
+  {
+    "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
+    "name": "balanceOf",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "transfer",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "spender", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "approve",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "mint",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+];
 
 // ABIs - Import from compiled contract artifacts
 export const TOURNAMENT_PLATFORM_ABI = [
@@ -452,6 +553,47 @@ export const WINNER_BADGE_ABI = [
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
+  }
+];
+
+export const ARCADE_PLATFORM_ABI = [
+  {
+    "inputs": [{ "internalType": "uint256", "name": "_score", "type": "uint256" }],
+    "name": "submitScore",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getLeaderboard",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "address", "name": "player", "type": "address" },
+          { "internalType": "uint256", "name": "score", "type": "uint256" }
+        ],
+        "internalType": "struct ArcadePlatform.PlayerScore[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "highScores",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+      "inputs": [],
+      "name": "getPlayerCount",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
   }
 ];
 

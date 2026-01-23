@@ -1,213 +1,81 @@
 # TournamentChain
 
-Decentralized Gaming Tournament Platform with Integrated Web3 Game
+Compete in tournaments. Win crypto prizes. Own your assets. A decentralized gaming platform built for true digital ownership.
 
-## Overview
+## What You Get
 
-TournamentChain combines a playable top-down survival shooter game with a decentralized tournament infrastructure. The game demonstrates the platform capabilities. The platform enables any Web3 game to run trustless tournaments with automatic prize distribution.
-
-## Key Features
-
-### Game Component
-
-- Top-down survival shooter built with React
-- Web3 asset ownership through ERC-1155 NFTs
-- On-chain scoring and leaderboards
-- Play-to-earn mechanics with gold and diamonds
-- Weapon and character progression systems
-- Wave-based enemy spawning with increasing difficulty
-
-### Tournament Platform
-
-- Smart contract-based tournament management
-- Entry fee escrow system
-- Automatic prize distribution
-- On-chain result verification
-- Cross-game compatibility
-- Platform fee system for sustainability
+You play games. You compete in tournaments. You win Gold and Diamond tokens. Your assets are NFTs. Your rank is on-chain. No centralized gatekeepers. No lost items. Pure skill-based competition.
 
 ## How It Works
 
-### For Players
+Connect your wallet. Mint your starter assets. Join a tournament. Play Wave Defense. Survive longer than others. Submit your score. Claim your prize. All powered by smart contracts.
 
-1. Connect your Web3 wallet
-2. Browse available tournaments
-3. Join tournaments by paying entry fees
-4. Play the game to achieve high scores
-5. Submit results automatically
-6. Receive prizes if you win
+## Your First Game
 
-### For Tournament Creators
+Step one: Connect your wallet. Use MetaMask or Social Login. Switch to Sepolia Testnet.
 
-1. Create tournaments with custom parameters
-2. Set entry fees and prize distributions
-3. Manage tournament participants
-4. Submit results when tournament ends
-5. Prizes distribute automatically
+Step two: Mint Free Tokens. Go to Profile. Use the Faucet. Get Gold and Diamond tokens for testing.
 
-### For Game Developers
+Step three: Mint Assets. Mint your first Weapon and Skin. These are ERC-1155 NFTs. They live in your wallet.
 
-1. Integrate TournamentPlatform contract
-2. Submit game results to tournaments
-3. Enable competitive play in your game
-4. White-label the platform for your studio
+Step four: Join a Tournament. Browse active tournaments. Pay the entry fee in Gold.
 
-## Technical Stack
+Step five: Play Wave Defense. Defend against waves of enemies. Survive as long as you can. Your score is verified on-chain.
 
-- **Frontend**: React with custom game components
-- **Web3 Integration**: React hooks (useWeb3React, useContract, useContractWrite)
-- **Smart Contracts**: Solidity on Ethereum-compatible chains
-- **Assets**: ERC-1155 NFTs for weapons and skins
-- **Currency**: ERC-20 tokens for gold and diamonds
+Step six: Claim Rewards. If you place in the top ranks, the prize pool is yours. Gold and Diamonds are sent directly to your wallet.
 
-## Gameplay
+## Games
 
-### Controls
+Wave Defense: A fast-paced survival shooter. Fight off waves of ghosts, spiders, and imps. Upgrade your weapons. Use your NFT skins. The longer you survive, the higher your score.
 
-- **W/A/S/D**: Move character
-- **Auto-shooting**: Character automatically targets nearest enemies
-- **Bomb**: Destroy all nearby enemies (once per game)
-- **Magnet**: Collect all experience orbs (once per game)
+Arcade Mode: Free-to-play practice. Compete on the Global Leaderboard. Prove your skills before entering high-stakes tournaments.
 
-### Scoring
+## Real-Time Features
 
-Score = (Survival Time × Time Multiplier) + (Kills × Kill Multiplier)
+Leaderboard updates instantly. See your rank change as scores come in. Tournament status updates live. Know exactly when a tournament ends and when prizes are ready.
 
-Higher scores rank higher in tournaments. Longer survival and more kills increase your score.
+## Key Features
 
-### Progression
+- **NFT Assets**: Weapons and skins are ERC-1155 tokens. Trade them. Sell them. Use them across games.
+- **Dual-Token Economy**: Gold (Entry Fees) and Diamonds (Premium Rewards).
+- **On-Chain Reputation**: Your wins are recorded forever. Winner Badges (SBTs) prove your victories.
+- **Anti-Cheat**: Scores are cryptographically signed and verified.
 
-- Kill enemies to gain experience
-- Level up to select upgrades
-- Purchase weapons and skins with gold
-- Upgrade equipment to improve performance
-- Use better assets to win tournaments
+## Technical Excellence
 
-## Smart Contracts
+Built with React and Phaser. Powered by Solidity. Secured by OpenZeppelin. Fast, responsive, and fully decentralized. No backend servers for game logic. Everything is on-chain.
 
-### TournamentPlatform.sol
+## Getting Started
 
-Manages tournament creation, participation, result submission, and prize distribution.
+Frontend: Navigate to frontend folder. Run npm install. Run npm run dev. Visit localhost:5173.
 
-Key functions:
-- `createTournament()`: Create new tournaments
-- `joinTournament()`: Join by paying entry fee
-- `submitResults()`: Submit tournament results
-- `getTournament()`: Get tournament details
-- `getTournamentWinners()`: Get winners and prizes
+Contracts: See contracts README for setup. Deploy to Sepolia. Update frontend addresses.
 
-### Game Contract
+## Deployed Contracts
 
-Manages game state, player assets, and leaderboards.
+Sepolia Testnet:
 
-Key functions:
-- `startGame()`: Begin game session
-- `gameOver()`: Submit game results
-- `getPlayerAllAssets()`: Get player gold and diamonds
-- `getPlayerAllWeaponInfo()`: Get owned weapons
-- `getTopListInfo()`: Get leaderboard
+- **TournamentPlatform**: `0x14b2303f4eb388e2842e61f1e3b88bcadee3cc73`
+- **GameAssets**: `0xa1dbb68470cce59218e8495f5350ffc8c8e36110`
+- **GoldToken**: `0x0bd3180bd740e8fb560329ea42f46f65aa5b242d`
+- **DiamondToken**: `0xc6d677f0fcb8343ee09063b6849aa40e1fc99bc5`
+- **ArcadePlatform**: `0x214124ae23b415b3AEA3bb9e260A56dc022bAf04`
 
-## Installation
+## Documentation
 
-```bash
-# Clone repository
-git clone [repository-url]
+[Contracts README](contracts/README.md): Smart contract setup and deployment details.
 
-# Install dependencies
-npm install
+[Frontend README](frontend/README.md): Frontend setup and feature documentation.
 
-# Start development server
-npm start
-```
+## Future Roadmap
 
-## Project Structure
+We are just getting started. Wave Defense is the MVP. Here is what comes next:
 
-```
-TournamentChain/
-├── contracts/          # Smart contracts
-├── src/
-│   ├── components/     # React game components
-│   ├── hooks/          # Web3 React hooks
-│   ├── pages/          # Tournament UI pages
-│   └── utils/          # Helper functions
-├── public/             # Static assets
-└── README.md
-```
+- **More Mini-Games**: The infrastructure is ready. We will add Flappy Bird, Tower Defense, and Puzzle games. The "Mini Games" section is already in the codebase.
+- **In-Game Shop**: A dedicated marketplace. Buy potions. Upgrade weapons. Trade skins directly with other players.
+- **Advanced Anti-Cheat**: Moving beyond signature verification. We plan to implement Zero-Knowledge Proofs (ZKPs) to validate game logic on-chain without revealing secrets.
+- **Expanded Leaderboards**: Weekly leagues. Clan wars. Seasonal rankings with massive prize pools.
 
-## Hackathon Alignment
+## Built for Hackathon
 
-### NFT-Based Asset Ownership
-✅ Weapons and skins as ERC-1155 NFTs
-✅ True player ownership
-✅ Transferable and tradeable assets
-
-### Play-to-Earn and Creator Economics
-✅ Players earn from gameplay and tournaments
-✅ Tournament creators earn revenue share
-✅ Platform fee model
-
-### Decentralized Game Infrastructure
-✅ On-chain tournament rules
-✅ Verifiable results
-✅ Automatic payouts
-✅ Works with any Web3 game
-
-### Metaverse and Virtual World Building
-✅ Cross-game tournaments
-✅ Community-driven events
-✅ Interoperable assets
-
-## Business Model
-
-- Platform fee: 5% of prize pools
-- Tournament creation fees (optional)
-- White-label licensing for studios
-- Multiple revenue streams
-
-## Prize Distribution
-
-Default distribution:
-- 1st Place: 50%
-- 2nd Place: 30%
-- 3rd Place: 15%
-- Other Places: 5% split
-
-## Roadmap
-
-### Phase 1: Smart Contracts ✅
-- Tournament platform contract
-- Game state contract
-- Asset NFT contracts
-
-### Phase 2: Frontend
-- Tournament browser
-- Tournament creation UI
-- Game components
-
-### Phase 3: Integration
-- Connect game to tournaments
-- Result submission system
-- Prize distribution
-
-### Phase 4: Polish
-- UI improvements
-- Documentation
-- Demo preparation
-
-## Contributing
-
-This project is built for the Node Engine Hackathon. Contributions welcome after hackathon completion.
-
-## License
-
-[License information]
-
-## Contact
-
-[Contact information]
-
-## Acknowledgments
-
-Built for the Node Engine Hackathon 2026 - Gaming and Entertainment Track.
-
-
+TournamentChain built for the Gaming & Entertainment Track. Solves asset ownership. Solves payout trust. Solves interoperability. Ready for players.

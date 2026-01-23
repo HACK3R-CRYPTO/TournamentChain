@@ -11,6 +11,9 @@ import TournamentDetails from './pages/TournamentDetails';
 import MyTournaments from './pages/MyTournaments';
 import Leaderboard from './pages/Leaderboard';
 import MiniGames from './pages/MiniGames';
+import WaveDefenseGame from './pages/WaveDefenseGame';
+import Profile from './pages/Profile';
+import Lottery from './pages/Lottery';
 
 const queryClient = new QueryClient();
 
@@ -26,6 +29,10 @@ function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/tournaments" element={<TournamentBrowser />} />
                 <Route path="/mini-games" element={<MiniGames />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/lottery" element={<Lottery />} />
+                <Route path="/play/:id" element={<WaveDefenseGame />} />
+                <Route path="/play-solo" element={<WaveDefenseGame />} />
                 <Route path="/create-tournament" element={<CreateTournament />} />
                 <Route path="/tournament/:id" element={<TournamentDetails />} />
                 <Route path="/my-tournaments" element={<MyTournaments />} />

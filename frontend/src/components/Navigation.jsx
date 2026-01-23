@@ -51,7 +51,9 @@ function Navigation() {
     { path: '/tournaments', label: 'Tournaments' },
     { path: '/mini-games', label: 'Mini Games' },
     { path: '/my-tournaments', label: 'My Tournaments' },
-    { path: '/leaderboard', label: 'Leaderboard' }
+    { path: '/lottery', label: 'Lottery' },
+    { path: '/leaderboard', label: 'Leaderboard' },
+    { path: '/profile', label: 'Profile' }
   ];
 
   return (
