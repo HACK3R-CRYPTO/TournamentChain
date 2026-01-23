@@ -75,11 +75,13 @@ Contract addresses are stored in `src/config/contracts.js`. Update these after r
 
 ```javascript
 export const CONTRACT_ADDRESSES = {
-  TOURNAMENT_PLATFORM: '0x...',
-  GAME_ASSETS: '0x...',
-  GOLD_TOKEN: '0x...',
-  DIAMOND_TOKEN: '0x...',
-  ARCADE_PLATFORM: '0x...'
+  TOURNAMENT_PLATFORM: '0x14b2303f4eb388e2842e61f1e3b88bcadee3cc73',
+  GAME_ASSETS: '0xa1dbb68470cce59218e8495f5350ffc8c8e36110',
+  GOLD_TOKEN: '0x0bd3180bd740e8fb560329ea42f46f65aa5b242d',
+  DIAMOND_TOKEN: '0xc6d677f0fcb8343ee09063b6849aa40e1fc99bc5',
+  ARCADE_PLATFORM: '0x214124ae23b415b3AEA3bb9e260A56dc022bAf04',
+  WINNER_BADGE: '0xb3e19d1215423abadb0a9105c61618aec6b02be6',
+  GAME_LOTTERY: '0xd06fce565798942949ae735f5e588fbf9e96afda'
 };
 ```
 

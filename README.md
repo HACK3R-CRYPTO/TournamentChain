@@ -60,6 +60,8 @@ Sepolia Testnet:
 - **GoldToken**: `0x0bd3180bd740e8fb560329ea42f46f65aa5b242d`
 - **DiamondToken**: `0xc6d677f0fcb8343ee09063b6849aa40e1fc99bc5`
 - **ArcadePlatform**: `0x214124ae23b415b3AEA3bb9e260A56dc022bAf04`
+- **WinnerBadge**: `0xb3e19d1215423abadb0a9105c61618aec6b02be6`
+- **GameLottery**: `0xd06fce565798942949ae735f5e588fbf9e96afda`
 
 ## Documentation
 
