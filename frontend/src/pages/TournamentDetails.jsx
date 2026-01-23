@@ -257,7 +257,7 @@ function TournamentDetails() {
         >
           ← Back
         </button>
-        <h1 className="m-0 text-3xl font-bold text-gradient">{tournament.name}</h1>
+        <h1 className="m-0 text-xl sm:text-2xl md:text-3xl font-bold text-gradient">{tournament.name}</h1>
       </header>
 
       <div className="max-w-7xl mx-auto p-8">
@@ -371,14 +371,14 @@ function TournamentDetails() {
                   <h3 className="mb-4 text-xl font-semibold">Tournament Schedule</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-4 p-4 bg-white/5 rounded-lg border border-white/10">
-                      <span className="text-3xl">🚀</span>
+                      <span className="text-2xl sm:text-3xl">🚀</span>
                       <div>
                         <p className="text-white/60 text-sm">Start Time</p>
                         <p className="font-semibold">{new Date(tournament.startTime).toLocaleString()}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 p-4 bg-white/5 rounded-lg border border-white/10">
-                      <span className="text-3xl">🏁</span>
+                      <span className="text-2xl sm:text-3xl">🏁</span>
                       <div>
                         <p className="text-white/60 text-sm">End Time</p>
                         <p className="font-semibold">{new Date(tournament.endTime).toLocaleString()}</p>
@@ -472,7 +472,7 @@ function TournamentDetails() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-white/40 uppercase tracking-wider mb-1">Score</p>
-                          <p className={`text-3xl font-bold ${index === 0 ? 'text-yellow-400' : 'text-gradient'}`}>
+                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${index === 0 ? 'text-yellow-400' : 'text-gradient'}`}>
                             {participant.score.toLocaleString()}
                           </p>
                         </div>

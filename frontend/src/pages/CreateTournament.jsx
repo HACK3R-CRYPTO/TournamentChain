@@ -169,7 +169,7 @@ function CreateTournament() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#16213e] text-white">
         <div className="max-w-2xl mx-auto my-16 text-center p-12 bg-white/5 rounded-xl border border-white/10">
-          <h2 className="mb-4 text-2xl">🔒 Wallet Connection Required</h2>
+          <h2 className="mb-4 text-lg sm:text-xl md:text-2xl">🔒 Wallet Connection Required</h2>
           {isConnecting ? (
             <>
               <div className="mb-4">
@@ -202,7 +202,7 @@ function CreateTournament() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#16213e] text-white">
         <div className="max-w-2xl mx-auto my-16 text-center p-12 bg-white/5 rounded-xl border border-white/10">
-          <h2 className="mb-4 text-2xl">⚠️ Wrong Network</h2>
+          <h2 className="mb-4 text-lg sm:text-xl md:text-2xl">⚠️ Wrong Network</h2>
           <p className="mb-2 text-white/90 font-semibold">Current Network: {chain?.name || 'Unknown'}</p>
           <p className="mb-6 text-white/70">This app requires Sepolia Testnet</p>
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-6 mb-6">
@@ -266,13 +266,13 @@ function CreateTournament() {
         >
           ← Back
         </button>
-        <h1 className="m-0 text-3xl font-bold text-gradient">Create Tournament</h1>
+        <h1 className="m-0 text-xl sm:text-2xl md:text-3xl font-bold text-gradient">Create Tournament</h1>
       </header>
 
       <div className="max-w-4xl mx-auto p-8">
         <form onSubmit={handleSubmit} className="bg-white/5 rounded-xl p-8 border border-white/10">
           <div className="mb-10 pb-8 border-b border-white/10">
-            <h2 className="mt-0 mb-2 text-2xl font-semibold">Basic Information</h2>
+            <h2 className="mt-0 mb-2 text-lg sm:text-xl md:text-2xl font-semibold">Basic Information</h2>
 
             <div className="mb-6">
               <label htmlFor="name" className="block mb-2 font-medium text-white/90">
@@ -308,7 +308,7 @@ function CreateTournament() {
           </div>
 
           <div className="mb-10 pb-8 border-b border-white/10">
-            <h2 className="mt-0 mb-2 text-2xl font-semibold">Tournament Settings</h2>
+            <h2 className="mt-0 mb-2 text-lg sm:text-xl md:text-2xl font-semibold">Tournament Settings</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
@@ -383,7 +383,7 @@ function CreateTournament() {
           </div>
 
           <div className="mb-10 pb-8 border-b border-white/10">
-            <h2 className="mt-0 mb-2 text-2xl font-semibold">Prize Distribution</h2>
+            <h2 className="mt-0 mb-2 text-lg sm:text-xl md:text-2xl font-semibold">Prize Distribution</h2>
             <p className="text-white/60 text-sm mb-6">
               Set the percentage of the prize pool each place receives (must total 100%)
             </p>
@@ -418,7 +418,7 @@ function CreateTournament() {
           </div>
 
           <div className="bg-purple-600/5 p-6 rounded-lg border border-purple-600/20 mb-8">
-            <h2 className="mt-0 mb-2 text-2xl font-semibold">Estimated Prize Pool</h2>
+            <h2 className="mt-0 mb-2 text-lg sm:text-xl md:text-2xl font-semibold">Estimated Prize Pool</h2>
             <div className="mb-6">
               <div className="flex justify-between py-3 border-b border-white/10">
                 <span>Entry Fee × Max Participants</span>

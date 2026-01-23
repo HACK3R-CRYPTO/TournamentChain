@@ -133,7 +133,7 @@ const Profile = () => {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="glass p-12 rounded-2xl text-center border border-white/10 max-w-md">
-                    <h2 className="text-3xl font-bold text-white mb-4">Connect Wallet</h2>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4">Connect Wallet</h2>
                     <p className="text-white/60 mb-8">Please connect your wallet to view your inventory and profile.</p>
                 </div>
             </div>

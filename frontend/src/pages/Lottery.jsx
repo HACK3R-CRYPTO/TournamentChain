@@ -9,17 +9,17 @@ const Lottery = () => {
 
     if (COMING_SOON) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="glass p-12 rounded-2xl text-center border border-white/10 max-w-md relative overflow-hidden">
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <div className="glass p-6 sm:p-8 md:p-12 rounded-2xl text-center border border-white/10 max-w-xs sm:max-w-sm md:max-w-md relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 z-0"></div>
                     <div className="relative z-10">
-                        <div className="text-6xl mb-6 animate-bounce">🚧</div>
-                        <h2 className="text-4xl font-bold text-white mb-4 text-gradient">Coming Soon</h2>
-                        <p className="text-white/60 mb-8 text-lg">
+                        <div className="text-4xl sm:text-5xl md:text-6xl mb-4 sm:mb-6 animate-bounce">🚧</div>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4 text-gradient">Coming Soon</h2>
+                        <p className="text-white/60 mb-6 sm:mb-8 text-sm sm:text-base md:text-lg leading-relaxed">
                             The Diamond Lottery is currently under maintenance. 
-                            <br/>We're making improvements to ensure a fair and exciting experience!
+                            <br className="hidden sm:inline"/>We're making improvements to ensure a fair and exciting experience!
                         </p>
-                        <div className="inline-block px-6 py-2 rounded-full bg-white/5 border border-white/10 text-white/40 text-sm font-mono">
+                        <div className="inline-block px-4 py-2 sm:px-6 sm:py-2 rounded-full bg-white/5 border border-white/10 text-white/40 text-xs sm:text-sm font-mono">
                             ETA: TBD
                         </div>
                     </div>

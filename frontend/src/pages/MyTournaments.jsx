@@ -155,7 +155,7 @@ function MyTournaments() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#16213e] text-white">
         <div className="max-w-2xl mx-auto my-16 text-center p-12 bg-white/5 rounded-xl border border-white/10">
-          <h2 className="mb-4 text-2xl">🔒 Wallet Connection Required</h2>
+          <h2 className="mb-4 text-lg sm:text-xl md:text-2xl">🔒 Wallet Connection Required</h2>
           <p className="mb-6 text-white/70">Please connect your wallet to view your tournaments</p>
           <button
             className="mt-6 px-8 py-3.5 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-purple-600/40 transition-all"
@@ -219,7 +219,7 @@ function MyTournaments() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#16213e] text-white">
       <header className="bg-white/5 backdrop-blur-lg border-b border-white/10 p-8">
-        <h1 className="m-0 text-3xl font-bold text-gradient">My Tournaments</h1>
+        <h1 className="m-0 text-xl sm:text-2xl md:text-3xl font-bold text-gradient">My Tournaments</h1>
         <p className="mt-2 text-white/70">Track your tournament participation and performance</p>
       </header>
 
@@ -252,7 +252,7 @@ function MyTournaments() {
             {tournaments.length === 0 ? (
               <div className="text-center py-16">
                 <div className="mb-6">
-                  <div className="text-6xl mb-4">🎮</div>
+                  <div className="text-4xl sm:text-5xl md:text-6xl mb-3 sm:mb-4">🎮</div>
                   <p className="text-xl text-white/80 mb-2">
                     {activeTab === 'joined' 
                       ? "You haven't joined any tournaments yet"
@@ -295,7 +295,7 @@ function MyTournaments() {
                       </div>
                       {activeTab === 'joined' && tournament.myRank && (
                         <div className="text-center">
-                          <div className="mb-1 text-3xl">{getRankBadge(tournament.myRank)}</div>
+                          <div className="mb-1 text-2xl sm:text-3xl">{getRankBadge(tournament.myRank)}</div>
                           <div className="text-sm text-white/60">Rank {tournament.myRank}</div>
                         </div>
                       )}

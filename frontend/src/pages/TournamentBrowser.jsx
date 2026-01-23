@@ -160,17 +160,17 @@ function TournamentBrowser() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0e27] via-[#1a1f3a] to-[#0f1419] text-white particle-bg">
       {!isConnected && (
-        <div className="glass bg-orange-500/10 border border-orange-500/30 p-6 text-center text-orange-400 mx-8 mt-6 rounded-xl animate-slide-up">
-          <p className="text-lg font-semibold">⚠️ Connect your wallet to create or join tournaments</p>
+        <div className="glass bg-orange-500/10 border border-orange-500/30 p-4 sm:p-6 text-center text-orange-400 mx-4 sm:mx-6 md:mx-8 mt-4 sm:mt-6 rounded-xl animate-slide-up">
+          <p className="text-sm sm:text-base lg:text-lg font-semibold">⚠️ Connect your wallet to create or join tournaments</p>
         </div>
       )}
 
-      <div className="max-w-[1400px] mx-auto p-8">
+      <div className="max-w-[1400px] mx-auto p-4 sm:p-6 md:p-8">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 animate-slide-up">
-          <h1 className="text-4xl md:text-5xl font-black text-gradient m-0">🏆 Tournaments</h1>
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 sm:mb-8 animate-slide-up">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-gradient m-0">🏆 Tournaments</h1>
           <button
-            className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-7 py-3.5 rounded-xl font-bold hover:scale-105 hover:shadow-2xl hover:shadow-purple-600/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-4 py-2.5 sm:px-6 md:px-7 sm:py-3 md:py-3.5 rounded-xl font-bold text-sm sm:text-base hover:scale-105 hover:shadow-2xl hover:shadow-purple-600/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => navigate('/create-tournament')}
             disabled={!isConnected}
           >
@@ -178,9 +178,9 @@ function TournamentBrowser() {
           </button>
         </div>
 
-        <div className="grid lg:grid-cols-[280px_1fr] gap-8">
-          <aside className="glass rounded-xl p-6 h-fit lg:sticky lg:top-28 animate-slide-up">
-            <h3 className="mt-0 mb-6 text-xl font-semibold">Filters</h3>
+        <div className="grid lg:grid-cols-[280px_1fr] gap-4 sm:gap-6 md:gap-8">
+          <aside className="glass rounded-xl p-4 sm:p-5 md:p-6 h-fit lg:sticky lg:top-28 animate-slide-up">
+            <h3 className="mt-0 mb-4 sm:mb-5 md:mb-6 text-lg sm:text-xl font-semibold">Filters</h3>
 
             <div className="mb-6">
               <label className="block text-sm mb-2 text-white/70 font-medium">Search</label>
@@ -257,40 +257,40 @@ function TournamentBrowser() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-6">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-4 sm:gap-5 md:gap-6">
                 {filteredTournaments.map((tournament, index) => (
                   <div
                     key={tournament.id}
-                    className="glass rounded-2xl p-6 transition-all hover:-translate-y-2 hover:glass-strong hover:shadow-2xl hover:shadow-purple-600/30 hover:border-purple-500/50 cursor-pointer animate-slide-up"
+                    className="glass rounded-2xl p-4 sm:p-5 md:p-6 transition-all hover:-translate-y-2 hover:glass-strong hover:shadow-2xl hover:shadow-purple-600/30 hover:border-purple-500/50 cursor-pointer animate-slide-up"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    <div className="flex justify-between items-start mb-4 gap-4">
-                      <h3 className="m-0 text-xl font-semibold flex-1">{tournament.name}</h3>
+                    <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
+                      <h3 className="m-0 text-base sm:text-lg md:text-xl font-semibold flex-1">{tournament.name}</h3>
                       {getStatusBadge(tournament.status)}
                     </div>
 
-                    <p className="text-white/70 text-sm mb-6 leading-relaxed">{tournament.description}</p>
+                    <p className="text-white/70 text-xs sm:text-sm mb-4 sm:mb-5 md:mb-6 leading-relaxed">{tournament.description}</p>
 
-                    <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-5 md:mb-6">
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs text-white/50 uppercase tracking-wider">Entry Fee</span>
-                        <span className="text-base font-semibold text-white">{tournament.entryFee} ETH</span>
+                        <span className="text-[10px] sm:text-xs text-white/50 uppercase tracking-wider">Entry Fee</span>
+                        <span className="text-sm sm:text-base font-semibold text-white">{tournament.entryFee} ETH</span>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs text-white/50 uppercase tracking-wider">Prize Pool</span>
-                        <span className="text-base font-semibold text-white">{tournament.prizePool} ETH</span>
+                        <span className="text-[10px] sm:text-xs text-white/50 uppercase tracking-wider">Prize Pool</span>
+                        <span className="text-sm sm:text-base font-semibold text-white">{tournament.prizePool} ETH</span>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs text-white/50 uppercase tracking-wider">Participants</span>
-                        <span className="text-base font-semibold text-white">
+                        <span className="text-[10px] sm:text-xs text-white/50 uppercase tracking-wider">Participants</span>
+                        <span className="text-sm sm:text-base font-semibold text-white">
                           {tournament.currentParticipants}/{tournament.maxParticipants}
                         </span>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs text-white/50 uppercase tracking-wider">
+                        <span className="text-[10px] sm:text-xs text-white/50 uppercase tracking-wider">
                           {Date.now() >= tournament.startTime && Date.now() < tournament.endTime ? 'Ends In' : 'Status'}
                         </span>
-                        <span className="text-base font-semibold text-white">
+                        <span className="text-sm sm:text-base font-semibold text-white">
                           {formatTimeRemaining(tournament.startTime, tournament.endTime, tournament.status)}
                         </span>
                       </div>
